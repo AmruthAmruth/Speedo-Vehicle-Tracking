@@ -1,9 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../../constants/constants';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const CTASection: React.FC = () => {
+    const navigate = useNavigate();
+
     return (
         <section
             id="cta"
@@ -99,6 +102,7 @@ const CTASection: React.FC = () => {
                     }}
                 >
                     <button
+                        onClick={() => navigate('/login')}
                         className="cta-btn-primary"
                         style={{
                             background: COLORS.textInverse,

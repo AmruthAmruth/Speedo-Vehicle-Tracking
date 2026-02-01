@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../../constants/constants';
 import SpeedIcon from '@mui/icons-material/Speed';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 
 const Navbar: React.FC = () => {
+    const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -120,7 +122,7 @@ const Navbar: React.FC = () => {
                         </button>
                     ))}
                     <button
-                        onClick={() => scrollToSection('cta')}
+                        onClick={() => navigate('/login')}
                         style={{
                             background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
                             color: COLORS.textInverse,
@@ -195,7 +197,7 @@ const Navbar: React.FC = () => {
                     </button>
                 ))}
                 <button
-                    onClick={() => scrollToSection('cta')}
+                    onClick={() => navigate('/login')}
                     style={{
                         background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
                         color: COLORS.textInverse,

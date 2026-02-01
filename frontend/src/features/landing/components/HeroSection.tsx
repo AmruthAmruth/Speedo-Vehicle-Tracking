@@ -1,10 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../../constants/constants';
 import SpeedIcon from '@mui/icons-material/Speed';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import MapIcon from '@mui/icons-material/Map';
 
 const HeroSection: React.FC = () => {
+    const navigate = useNavigate();
+
     const scrollToSection = (sectionId: string) => {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -98,7 +101,7 @@ const HeroSection: React.FC = () => {
                     }}
                 >
                     <button
-                        onClick={() => scrollToSection('cta')}
+                        onClick={() => navigate('/login')}
                         className="hero-btn-primary"
                         style={{
                             background: COLORS.textInverse,
