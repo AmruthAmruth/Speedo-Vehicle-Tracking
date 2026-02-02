@@ -1,0 +1,260 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { tripApi } from '../../../services/tripApi';
+import { Trip, GPSPoint } from '../../../types/trip.types';
+import { formatDistance, formatDuration, calculateTripDuration, formatDate, formatSpeed } from '../../../utils/tripUtils';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import RouteIcon from '@mui/icons-material/Route';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SpeedIcon from '@mui/icons-material/Speed';
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+
+const TripDetails: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [trip, setTrip] = useState<Trip | null>(null);
+    const [gpsPoints, setGpsPoints] = useState<GPSPoint[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (id) {
+            loadTripData();
+        }
+    }, [id]);
+
+    const loadTripData = async () => {
+        try {
+            const [tripData, gpsData] = await Promise.all([
+                tripApi.getTripById(id!),
+                tripApi.getTripGPSPoints(id!),
+            ]);
+            setTrip(tripData);
+            setGpsPoints(gpsData.gpsPoints);
+        } catch (error) {
+            console.error('Failed to load trip data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
+                <div className="spinner"></div>
+            </div>
+        );
+    }
+
+    if (!trip) {
+        return (
+            <div className="dashboard-card">
+                <div className="empty-state">
+                    <div className="empty-icon">❌</div>
+                    <h4 className="empty-title">Trip not found</h4>
+                    <p className="empty-description">The trip you're looking for doesn't exist</p>
+                    <button className="btn-primary" onClick={() => navigate('/dashboard/trips')}>
+                        Back to Trips
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const duration = calculateTripDuration(trip.startTime, trip.endTime);
+    const avgSpeed = duration > 0 ? (trip.totalDistance / 1000) / (duration / 3600) : 0;
+    const maxSpeed = Math.max(...gpsPoints.map(p => p.speed), 0);
+
+    // Prepare map data
+    const positions: [number, number][] = gpsPoints.map(p => [p.latitude, p.longitude]);
+
+    return (
+        <div className="trip-details">
+            {/* Header */}
+            <div style={{ marginBottom: '24px' }}>
+                <button
+                    className="btn-secondary"
+                    style={{ marginBottom: '16px' }}
+                    onClick={() => navigate('/dashboard/trips')}
+                >
+                    <ArrowBackIcon style={{ fontSize: 18 }} />
+                    Back to Trips
+                </button>
+                <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#2d3748', margin: '0 0 8px 0' }}>
+                    {trip.name}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#718096', margin: 0 }}>
+                    {formatDate(trip.startTime)} - {formatDate(trip.endTime)}
+                </p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="stats-grid" style={{ marginBottom: '24px' }}>
+                <div className="stat-card">
+                    <div className="stat-icon">
+                        <RouteIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">Total Distance</p>
+                        <h3 className="stat-value">{formatDistance(trip.totalDistance)}</h3>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+                        <AccessTimeIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">Duration</p>
+                        <h3 className="stat-value">{formatDuration(duration)}</h3>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+                        <SpeedIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">Avg Speed</p>
+                        <h3 className="stat-value">{formatSpeed(avgSpeed)}</h3>
+                        <p style={{ fontSize: '12px', color: '#718096', margin: '4px 0 0 0' }}>
+                            Max: {formatSpeed(maxSpeed)}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+                        <PauseCircleIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">Idling Time</p>
+                        <h3 className="stat-value">{formatDuration(trip.totalIdlingTime)}</h3>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' }}>
+                        <StopCircleIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">Stoppage Time</p>
+                        <h3 className="stat-value">{formatDuration(trip.totalStoppageTime)}</h3>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }}>
+                        <LocationOnIcon style={{ fontSize: 28 }} />
+                    </div>
+                    <div className="stat-content">
+                        <p className="stat-label">GPS Points</p>
+                        <h3 className="stat-value">{gpsPoints.length}</h3>
+                    </div>
+                </div>
+            </div>
+
+            {/* Map - Placeholder */}
+            <div className="dashboard-card" style={{ marginBottom: '24px' }}>
+                <div className="card-header">
+                    <h3 className="card-title">Trip Route</h3>
+                    <p className="card-subtitle">Interactive map visualization</p>
+                </div>
+                {positions.length > 0 ? (
+                    <div style={{
+                        height: '500px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        flexDirection: 'column',
+                        gap: '16px'
+                    }}>
+                        <LocationOnIcon style={{ fontSize: 64 }} />
+                        <h3 style={{ margin: 0 }}>Map Visualization</h3>
+                        <p style={{ margin: 0, opacity: 0.9 }}>
+                            {positions.length} GPS points • {formatDistance(trip.totalDistance)}
+                        </p>
+                        <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
+                            Start: {positions[0][0].toFixed(6)}, {positions[0][1].toFixed(6)}
+                        </p>
+                        <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
+                            End: {positions[positions.length - 1][0].toFixed(6)}, {positions[positions.length - 1][1].toFixed(6)}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="empty-state">
+                        <div className="empty-icon">🗺️</div>
+                        <h4 className="empty-title">No GPS data available</h4>
+                        <p className="empty-description">This trip doesn't have any GPS points to display</p>
+                    </div>
+                )}
+            </div>
+
+            {/* GPS Points Table */}
+            <div className="dashboard-card">
+                <div className="card-header">
+                    <h3 className="card-title">GPS Points</h3>
+                    <p className="card-subtitle">{gpsPoints.length} points recorded</p>
+                </div>
+                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
+                            <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>#</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Timestamp</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Latitude</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Longitude</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Speed</th>
+                                <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Ignition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {gpsPoints.slice(0, 100).map((point, index) => (
+                                <tr key={point._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '12px', color: '#718096' }}>{index + 1}</td>
+                                    <td style={{ padding: '12px', color: '#2d3748', fontSize: '13px' }}>
+                                        {new Date(point.timestamp).toLocaleString()}
+                                    </td>
+                                    <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
+                                        {point.latitude.toFixed(6)}
+                                    </td>
+                                    <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
+                                        {point.longitude.toFixed(6)}
+                                    </td>
+                                    <td style={{ padding: '12px', color: '#2d3748' }}>
+                                        {formatSpeed(point.speed)}
+                                    </td>
+                                    <td style={{ padding: '12px' }}>
+                                        <span
+                                            style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                background: point.ignition ? '#d1fae5' : '#fee2e2',
+                                                color: point.ignition ? '#065f46' : '#991b1b',
+                                            }}
+                                        >
+                                            {point.ignition ? 'ON' : 'OFF'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {gpsPoints.length > 100 && (
+                        <p style={{ textAlign: 'center', padding: '16px', color: '#718096', fontSize: '14px' }}>
+                            Showing first 100 of {gpsPoints.length} points
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default TripDetails;

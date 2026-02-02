@@ -8,4 +8,14 @@ export class TripRepository {
     }
     return TripModel.create(data);
   }
+
+  async findByUserId(userId: string) {
+    return TripModel.find({ userId })
+      .sort({ startTime: -1 })
+      .lean();
+  }
+
+  async findById(id: string) {
+    return TripModel.findById(id).lean();
+  }
 }

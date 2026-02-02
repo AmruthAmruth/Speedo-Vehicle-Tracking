@@ -9,6 +9,9 @@ const service = new TripUploadService(
   new GPSPointRepository()
 );
 
+const tripRepo = new TripRepository();
+const gpsRepo = new GPSPointRepository();
+
 export const uploadTrip = async (
   req: AuthRequest,
   res: Response
@@ -53,6 +56,95 @@ export const uploadTrip = async (
     // Generic error
     res.status(500).json({
       message: 'Failed to upload trip',
+      error: error.message
+    });
+  }
+};
+
+export const getUserTrips = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const trips = await tripRepo.findByUserId(req.user.userId);
+
+    res.status(200).json({
+      trips,
+      count: trips.length
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: 'Failed to fetch trips',
+      error: error.message
+    });
+  }
+};
+
+export const getTripById = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const { id } = req.params;
+    const trip = await tripRepo.findById(id as string);
+
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Verify trip belongs to user
+    if (trip.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.status(200).json(trip);
+  } catch (error: any) {
+    res.status(500).json({
+      message: 'Failed to fetch trip',
+      error: error.message
+    });
+  }
+};
+
+export const getTripGPSPoints = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const { id } = req.params;
+
+    // Verify trip exists and belongs to user
+    const trip = await tripRepo.findById(id as string);
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    if (trip.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Get GPS points
+    const gpsPoints = await gpsRepo.findByTripId(id as string);
+
+    res.status(200).json({
+      gpsPoints,
+      count: gpsPoints.length
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: 'Failed to fetch GPS points',
       error: error.message
     });
   }

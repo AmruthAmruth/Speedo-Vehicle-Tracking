@@ -8,4 +8,10 @@ export class GPSPointRepository {
     }
     return GPSPointModel.insertMany(points);
   }
+
+  async findByTripId(tripId: string) {
+    return GPSPointModel.find({ tripId })
+      .sort({ timestamp: 1 })
+      .lean();
+  }
 }
