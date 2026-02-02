@@ -8,90 +8,95 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#667eea',
-          dark: '#764ba2',
+          DEFAULT: '#6366f1',   // Vibrant indigo
+          dark: '#4f46e5',
+          light: '#818cf8',
         },
+
         accent: {
-          cyan: '#00ffff',
-          purple: '#667eea',
-          pink: '#f093fb',
-          blue: '#4facfe',
-          green: '#43e97b',
-          'red-pink': '#fa709a',
+          blue: '#3b82f6',      // Bright blue
+          violet: '#8b5cf6',    // Vibrant violet
+          teal: '#14b8a6',      // Teal
+          amber: '#f59e0b',     // Amber
+          rose: '#f43f5e',      // Rose
+          green: '#10b981',     // Green
         },
+
+        light: {
+          DEFAULT: '#ffffff',   // Pure white
+          gray: '#f9fafb',      // Very light gray background
+          border: '#e5e7eb',    // Light border
+          hover: '#f3f4f6',     // Hover state
+        },
+
         dark: {
-          DEFAULT: '#0f172a',
-          light: '#1e293b',
-          lighter: '#2d3748',
+          DEFAULT: '#111827',   // Dark text
+          light: '#374151',     // Medium dark
+          lighter: '#6b7280',   // Light dark
+        },
+
+        text: {
+          primary: '#111827',   // Dark text for light backgrounds
+          secondary: '#6b7280', // Gray text
+          muted: '#9ca3af',     // Muted gray
         },
       },
+
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        display: ['Poppins', 'sans-serif'],
       },
+
       animation: {
-        'fade-in-up': 'fadeInUp 1s ease-out',
-        'fade-in-down': 'fadeInDown 0.6s ease-out',
-        'gradient-shift': 'gradientShift 3s ease infinite',
-        'pulse-slow': 'pulse 2s ease-in-out infinite',
-        'glow': 'glow 2s ease-in-out infinite',
-        'float': 'float 20s ease-in-out infinite',
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'fade-in-up': 'fadeInUp 0.7s ease-out',
+        'glow-subtle': 'glowSubtle 3s ease-in-out infinite',
+        'float-slow': 'floatSlow 16s ease-in-out infinite',
       },
+
       keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+
         fadeInUp: {
-          'from': {
-            opacity: '0',
-            transform: 'translateY(30px)',
-          },
-          'to': {
-            opacity: '1',
-            transform: 'translateY(0)',
-          },
+          from: { opacity: '0', transform: 'translateY(24px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
         },
-        fadeInDown: {
-          'from': {
-            opacity: '0',
-            transform: 'translateY(-20px)',
-          },
-          'to': {
-            opacity: '1',
-            transform: 'translateY(0)',
-          },
-        },
-        gradientShift: {
+
+        glowSubtle: {
           '0%, 100%': {
-            'background-position': '0% 50%',
+            boxShadow: '0 0 0 rgba(91, 124, 250, 0)',
           },
           '50%': {
-            'background-position': '100% 50%',
+            boxShadow: '0 0 24px rgba(91, 124, 250, 0.35)',
           },
         },
-        glow: {
-          '0%, 100%': {
-            'box-shadow': '0 4px 15px rgba(102, 126, 234, 0.4)',
-          },
-          '50%': {
-            'box-shadow': '0 6px 25px rgba(102, 126, 234, 0.7)',
-          },
-        },
-        float: {
-          '0%, 100%': {
-            transform: 'translate(0, 0) scale(1)',
-          },
-          '33%': {
-            transform: 'translate(30px, -30px) scale(1.1)',
-          },
-          '66%': {
-            transform: 'translate(-20px, 20px) scale(0.9)',
-          },
+
+        floatSlow: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-12px)' },
         },
       },
+
       backgroundImage: {
-        'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'gradient-cyan': 'linear-gradient(135deg, #00ffff 0%, #667eea 100%)',
-        'gradient-hero': 'linear-gradient(135deg, #00ffff 0%, #667eea 50%, #f093fb 100%)',
+        'gradient-primary':
+          'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
+
+        'gradient-light':
+          'linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)',
+
+        'gradient-soft':
+          'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)',
+
+        'gradient-hero':
+          'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #14b8a6 100%)',
       },
+
       backdropBlur: {
         xs: '2px',
+        sm: '6px',
       },
     },
   },

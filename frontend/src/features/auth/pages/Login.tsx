@@ -123,15 +123,7 @@ const Login: React.FC = () => {
                         </div>
 
                         {errors.general && (
-                            <div style={{
-                                padding: '1rem',
-                                backgroundColor: '#FEE2E2',
-                                border: '1px solid #DC2626',
-                                borderRadius: '8px',
-                                marginBottom: '1.5rem',
-                                color: '#DC2626',
-                                fontSize: '0.95rem',
-                            }}>
+                            <div className="p-4 bg-red-50 border border-accent-rose rounded-lg mb-6 text-accent-rose text-sm">
                                 {errors.general}
                             </div>
                         )}

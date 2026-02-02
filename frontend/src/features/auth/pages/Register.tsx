@@ -105,16 +105,16 @@ const Register: React.FC = () => {
         }
     };
 
-    const getPasswordStrength = (): { strength: string; color: string } => {
+    const getPasswordStrength = (): { strength: string; colorClass: string } => {
         const password = formData.password;
-        if (!password) return { strength: '', color: '' };
+        if (!password) return { strength: '', colorClass: '' };
 
         if (password.length < 6) {
-            return { strength: 'Weak', color: '#DC2626' };
+            return { strength: 'Weak', colorClass: 'text-accent-rose' };
         } else if (password.length < 10) {
-            return { strength: 'Medium', color: '#FACC15' };
+            return { strength: 'Medium', colorClass: 'text-accent-amber' };
         } else {
-            return { strength: 'Strong', color: '#16A34A' };
+            return { strength: 'Strong', colorClass: 'text-accent-teal' };
         }
     };
 
@@ -157,15 +157,7 @@ const Register: React.FC = () => {
                         </div>
 
                         {errors.general && (
-                            <div style={{
-                                padding: '1rem',
-                                backgroundColor: '#FEE2E2',
-                                border: '1px solid #DC2626',
-                                borderRadius: '8px',
-                                marginBottom: '1.5rem',
-                                color: '#DC2626',
-                                fontSize: '0.95rem',
-                            }}>
+                            <div className="p-4 bg-red-50 border border-accent-rose rounded-lg mb-6 text-accent-rose text-sm">
                                 {errors.general}
                             </div>
                         )}
@@ -214,7 +206,7 @@ const Register: React.FC = () => {
                                     disabled={isLoading}
                                 />
                                 {passwordStrength.strength && (
-                                    <div style={{ fontSize: '0.875rem', marginTop: '0.25rem', color: passwordStrength.color }}>
+                                    <div className={`text-sm mt-1 ${passwordStrength.colorClass}`}>
                                         Password strength: <strong>{passwordStrength.strength}</strong>
                                     </div>
                                 )}

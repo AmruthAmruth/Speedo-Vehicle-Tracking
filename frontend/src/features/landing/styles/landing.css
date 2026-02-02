@@ -8,12 +8,13 @@ html {
 /* Landing Page Container */
 .landing-page {
     overflow-x: hidden;
+    background: #f9fafb;
 }
 
 /* Navbar Styles */
 .nav-link:hover {
-    background-color: rgba(30, 58, 138, 0.1);
-    color: #1E3A8A;
+    background-color: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
 }
 
 .login-btn:hover {
@@ -128,11 +129,11 @@ html {
 
 .hero-btn-primary:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
 }
 
 .hero-btn-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(99, 102, 241, 0.1);
     transform: translateY(-3px);
 }
 
@@ -154,7 +155,7 @@ html {
 .feature-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    border-color: #2563EB;
+    border-color: #6366f1;
 }
 
 .feature-card {
@@ -210,7 +211,7 @@ html {
 /* Benefit Cards */
 .benefit-card:hover {
     transform: translateY(-8px);
-    border-color: #2563EB;
+    border-color: #6366f1;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
@@ -233,11 +234,11 @@ html {
 
 .cta-btn-primary:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
 }
 
 .cta-btn-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(99, 102, 241, 0.1);
     transform: translateY(-3px);
 }
 
@@ -313,14 +314,14 @@ html {
 
 /* Utility Classes */
 .glassmorphism {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 /* Gradient Text */
 .gradient-text {
-    background: linear-gradient(135deg, #1E3A8A, #0EA5A4);
+    background: linear-gradient(135deg, #6366f1, #14b8a6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

@@ -59,11 +59,11 @@ const DashboardOverview: React.FC = () => {
     return (
         <div className="dashboard-overview">
             {/* Welcome Section */}
-            <div className="welcome-section" style={{ marginBottom: '30px' }}>
-                <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#2d3748', margin: '0 0 8px 0' }}>
+            <div className="welcome-section mb-8">
+                <h2 className="text-3xl font-bold text-text-primary mb-2">
                     Welcome to Your Dashboard
                 </h2>
-                <p style={{ fontSize: '16px', color: '#718096', margin: 0 }}>
+                <p className="text-base text-text-secondary">
                     Track and analyze your vehicle trips with precision
                 </p>
             </div>
@@ -81,7 +81,7 @@ const DashboardOverview: React.FC = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+                    <div className="stat-icon bg-gradient-to-br from-accent-violet to-accent-rose">
                         <RouteIcon style={{ fontSize: 28 }} />
                     </div>
                     <div className="stat-content">
@@ -91,7 +91,7 @@ const DashboardOverview: React.FC = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+                    <div className="stat-icon bg-gradient-to-br from-accent-blue to-accent-teal">
                         <AccessTimeIcon style={{ fontSize: 28 }} />
                     </div>
                     <div className="stat-content">
@@ -101,7 +101,7 @@ const DashboardOverview: React.FC = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+                    <div className="stat-icon bg-gradient-to-br from-accent-rose to-accent-amber">
                         <SpeedIcon style={{ fontSize: 28 }} />
                     </div>
                     <div className="stat-content">
@@ -151,33 +151,32 @@ const DashboardOverview: React.FC = () => {
                     </div>
                 ) : (
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <table className="w-full border-collapse">
                             <thead>
-                                <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Trip Name</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Date</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Distance</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Duration</th>
-                                    <th style={{ padding: '12px', textAlign: 'left', color: '#718096', fontWeight: 600 }}>Action</th>
+                                <tr className="border-b-2 border-light-border">
+                                    <th className="p-3 text-left text-text-secondary font-semibold">Trip Name</th>
+                                    <th className="p-3 text-left text-text-secondary font-semibold">Date</th>
+                                    <th className="p-3 text-left text-text-secondary font-semibold">Distance</th>
+                                    <th className="p-3 text-left text-text-secondary font-semibold">Duration</th>
+                                    <th className="p-3 text-left text-text-secondary font-semibold">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {recentTrips.map((trip) => (
-                                    <tr key={trip._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                        <td style={{ padding: '16px', fontWeight: 600, color: '#2d3748' }}>{trip.name}</td>
-                                        <td style={{ padding: '16px', color: '#718096' }}>
+                                    <tr key={trip._id} className="border-b border-light-border">
+                                        <td className="p-4 font-semibold text-text-primary">{trip.name}</td>
+                                        <td className="p-4 text-text-secondary">
                                             {new Date(trip.startTime).toLocaleDateString()}
                                         </td>
-                                        <td style={{ padding: '16px', color: '#718096' }}>
+                                        <td className="p-4 text-text-secondary">
                                             {formatDistance(trip.totalDistance)}
                                         </td>
-                                        <td style={{ padding: '16px', color: '#718096' }}>
+                                        <td className="p-4 text-text-secondary">
                                             {formatDuration(calculateTripDuration(trip.startTime, trip.endTime))}
                                         </td>
-                                        <td style={{ padding: '16px' }}>
+                                        <td className="p-4">
                                             <button
-                                                className="btn-secondary"
-                                                style={{ padding: '8px 16px', fontSize: '13px' }}
+                                                className="btn-secondary text-sm px-4 py-2"
                                                 onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
                                             >
                                                 View Details
