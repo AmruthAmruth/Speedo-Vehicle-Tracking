@@ -7,7 +7,7 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  // Accept only CSV files
+
   if (file.mimetype === 'text/csv' ||
     file.mimetype === 'application/csv' ||
     file.originalname.endsWith('.csv')) {

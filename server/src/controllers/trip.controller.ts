@@ -38,7 +38,7 @@ export const uploadTrip = async (
       gpsPointsProcessed: result.pointsCount
     });
   } catch (error: any) {
-    // Categorize errors for better client feedback
+
     if (error.name === 'CSVValidationError') {
       return res.status(400).json({
         message: 'CSV validation failed',
@@ -100,7 +100,7 @@ export const getTripById = async (
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    // Verify trip belongs to user
+    
     if (trip.userId.toString() !== req.user.userId) {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -125,7 +125,7 @@ export const getTripGPSPoints = async (
 
     const { id } = req.params;
 
-    // Verify trip exists and belongs to user
+ 
     const trip = await tripRepo.findById(id as string);
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
@@ -135,7 +135,7 @@ export const getTripGPSPoints = async (
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Get GPS points
+    
     const gpsPoints = await gpsRepo.findByTripId(id as string);
 
     res.status(200).json({

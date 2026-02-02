@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { tripApi } from '../../../services/tripApi';
 import { Trip, GPSPoint } from '../../../types/trip.types';
 import { formatDistance, formatDuration, calculateTripDuration, formatDate, formatSpeed } from '../../../utils/tripUtils';
+import TripMap from '../components/TripMap';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RouteIcon from '@mui/icons-material/Route';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -17,6 +18,9 @@ const TripDetails: React.FC = () => {
     const [trip, setTrip] = useState<Trip | null>(null);
     const [gpsPoints, setGpsPoints] = useState<GPSPoint[]>([]);
     const [loading, setLoading] = useState(true);
+    const [speedLimit, setSpeedLimit] = useState(80);
+    const [showStoppages, setShowStoppages] = useState(true);
+    const [showIdling, setShowIdling] = useState(true);
 
     useEffect(() => {
         if (id) {
@@ -65,9 +69,6 @@ const TripDetails: React.FC = () => {
     const duration = calculateTripDuration(trip.startTime, trip.endTime);
     const avgSpeed = duration > 0 ? (trip.totalDistance / 1000) / (duration / 3600) : 0;
     const maxSpeed = Math.max(...gpsPoints.map(p => p.speed), 0);
-
-    // Prepare map data
-    const positions: [number, number][] = gpsPoints.map(p => [p.latitude, p.longitude]);
 
     return (
         <div className="trip-details">
@@ -155,36 +156,82 @@ const TripDetails: React.FC = () => {
                 </div>
             </div>
 
-            {/* Map - Placeholder */}
+            {/* Map Visualization */}
             <div className="dashboard-card" style={{ marginBottom: '24px' }}>
-                <div className="card-header">
-                    <h3 className="card-title">Trip Route</h3>
-                    <p className="card-subtitle">Interactive map visualization</p>
-                </div>
-                {positions.length > 0 ? (
-                    <div style={{
-                        height: '500px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        flexDirection: 'column',
-                        gap: '16px'
-                    }}>
-                        <LocationOnIcon style={{ fontSize: 64 }} />
-                        <h3 style={{ margin: 0 }}>Map Visualization</h3>
-                        <p style={{ margin: 0, opacity: 0.9 }}>
-                            {positions.length} GPS points • {formatDistance(trip.totalDistance)}
-                        </p>
-                        <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
-                            Start: {positions[0][0].toFixed(6)}, {positions[0][1].toFixed(6)}
-                        </p>
-                        <p style={{ margin: 0, fontSize: '14px', opacity: 0.8 }}>
-                            End: {positions[positions.length - 1][0].toFixed(6)}, {positions[positions.length - 1][1].toFixed(6)}
-                        </p>
+                <div className="card-header" style={{ marginBottom: '16px' }}>
+                    <div>
+                        <h3 className="card-title">Trip Route</h3>
+                        <p className="card-subtitle">Interactive map with overspeed, stoppages, and idling detection</p>
                     </div>
+                </div>
+
+                {/* Map Controls */}
+                <div style={{
+                    display: 'flex',
+                    gap: '16px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    padding: '12px',
+                    background: '#f9fafb',
+                    borderRadius: '8px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label htmlFor="speedLimit" style={{ fontSize: '14px', fontWeight: 600, color: '#4b5563' }}>
+                            Speed Limit:
+                        </label>
+                        <input
+                            type="number"
+                            id="speedLimit"
+                            value={speedLimit}
+                            onChange={(e) => setSpeedLimit(Number(e.target.value))}
+                            min="20"
+                            max="200"
+                            step="10"
+                            style={{
+                                width: '80px',
+                                padding: '6px 10px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                fontWeight: 600
+                            }}
+                        />
+                        <span style={{ fontSize: '14px', color: '#6b7280' }}>km/h</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={showStoppages}
+                                onChange={(e) => setShowStoppages(e.target.checked)}
+                                style={{ cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '14px', color: '#4b5563' }}>Show Stoppages</span>
+                        </label>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={showIdling}
+                                onChange={(e) => setShowIdling(e.target.checked)}
+                                style={{ cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '14px', color: '#4b5563' }}>Show Idling</span>
+                        </label>
+                    </div>
+                </div>
+
+                {/* Map Component */}
+                {gpsPoints.length > 0 ? (
+                    <TripMap
+                        gpsPoints={gpsPoints}
+                        tripName={trip.name}
+                        speedLimit={speedLimit}
+                        showStoppages={showStoppages}
+                        showIdling={showIdling}
+                    />
                 ) : (
                     <div className="empty-state">
                         <div className="empty-icon">🗺️</div>

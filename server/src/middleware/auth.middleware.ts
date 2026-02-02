@@ -27,7 +27,7 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
-    // 1. Read Authorization header
+  
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -36,22 +36,22 @@ export const authMiddleware = (
       });
     }
 
-    // 2. Extract token
+ 
     const token = authHeader.split(' ')[1];
 
-    // 3. Verify token
+   
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
-    // 4. Attach user to request
+   
     req.user = {
       userId: decoded.userId,
       email: decoded.email
     };
 
-    // 5. Continue request
+    
     next();
   } catch (error) {
     return res.status(401).json({
