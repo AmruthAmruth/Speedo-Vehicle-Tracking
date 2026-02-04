@@ -3,6 +3,7 @@ import { TripUploadService } from '../services/tripUpload.service';
 import { TripRepository } from '../repositories/trip.repository';
 import { GPSPointRepository } from '../repositories/gpspoint.repository';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { HTTP_STATUS, HTTP_MESSAGES } from '../constants/http.constants';
 
 const service = new TripUploadService(
   new TripRepository(),
@@ -18,11 +19,11 @@ export const uploadTrip = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED });
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: HTTP_MESSAGES.TRIP.NO_FILE_UPLOADED });
     }
 
     const result = await service.uploadTrip(
@@ -30,8 +31,8 @@ export const uploadTrip = async (
       req.file.buffer
     );
 
-    res.status(201).json({
-      message: 'Trip uploaded successfully',
+    res.status(HTTP_STATUS.CREATED).json({
+      message: HTTP_MESSAGES.TRIP.TRIP_UPLOADED_SUCCESSFULLY,
       tripId: result.trip._id,
       startTime: result.trip.startTime,
       endTime: result.trip.endTime,
@@ -40,22 +41,22 @@ export const uploadTrip = async (
   } catch (error: any) {
 
     if (error.name === 'CSVValidationError') {
-      return res.status(400).json({
-        message: 'CSV validation failed',
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: HTTP_MESSAGES.TRIP.CSV_VALIDATION_FAILED,
         error: error.message
       });
     }
 
     if (error.message?.includes('Invalid file type')) {
-      return res.status(400).json({
-        message: 'Invalid file type',
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: HTTP_MESSAGES.TRIP.INVALID_FILE_TYPE,
         error: error.message
       });
     }
 
     // Generic error
-    res.status(500).json({
-      message: 'Failed to upload trip',
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: HTTP_MESSAGES.TRIP.FAILED_TO_UPLOAD_TRIP,
       error: error.message
     });
   }
@@ -67,18 +68,18 @@ export const getUserTrips = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED });
     }
 
     const trips = await tripRepo.findByUserId(req.user.userId);
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       trips,
       count: trips.length
     });
   } catch (error: any) {
-    res.status(500).json({
-      message: 'Failed to fetch trips',
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: HTTP_MESSAGES.TRIP.FAILED_TO_FETCH_TRIPS,
       error: error.message
     });
   }
@@ -90,25 +91,25 @@ export const getTripById = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED });
     }
 
     const { id } = req.params;
     const trip = await tripRepo.findById(id as string);
 
     if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND });
     }
 
-    
+
     if (trip.userId.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: HTTP_MESSAGES.TRIP.ACCESS_DENIED });
     }
 
-    res.status(200).json(trip);
+    res.status(HTTP_STATUS.OK).json(trip);
   } catch (error: any) {
-    res.status(500).json({
-      message: 'Failed to fetch trip',
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: HTTP_MESSAGES.TRIP.FAILED_TO_FETCH_TRIP,
       error: error.message
     });
   }
@@ -120,31 +121,31 @@ export const getTripGPSPoints = async (
 ) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED });
     }
 
     const { id } = req.params;
 
- 
+
     const trip = await tripRepo.findById(id as string);
     if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND });
     }
 
     if (trip.userId.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: HTTP_MESSAGES.TRIP.ACCESS_DENIED });
     }
 
-    
+
     const gpsPoints = await gpsRepo.findByTripId(id as string);
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       gpsPoints,
       count: gpsPoints.length
     });
   } catch (error: any) {
-    res.status(500).json({
-      message: 'Failed to fetch GPS points',
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: HTTP_MESSAGES.TRIP.FAILED_TO_FETCH_GPS_POINTS,
       error: error.message
     });
   }

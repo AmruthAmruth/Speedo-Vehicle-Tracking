@@ -6,7 +6,7 @@ export interface IGPSPoint extends Document {
   longitude: number;
   timestamp: Date;
   ignition: boolean;
-  speed: number;   // km/h (calculated later)
+  speed: number; 
 }
 
 const GPSPointSchema = new Schema<IGPSPoint>(

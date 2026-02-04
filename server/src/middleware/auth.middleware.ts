@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { HTTP_STATUS, HTTP_MESSAGES } from '../constants/http.constants';
 
 
 interface JwtPayload {
@@ -27,35 +28,35 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
-  
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        message: 'Authorization token missing'
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        message: HTTP_MESSAGES.AUTH.AUTHORIZATION_TOKEN_MISSING
       });
     }
 
- 
+
     const token = authHeader.split(' ')[1];
 
-   
+
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
-   
+
     req.user = {
       userId: decoded.userId,
       email: decoded.email
     };
 
-    
+
     next();
   } catch (error) {
-    return res.status(401).json({
-      message: 'Invalid or expired token'
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+      message: HTTP_MESSAGES.AUTH.INVALID_OR_EXPIRED_TOKEN
     });
   }
 };

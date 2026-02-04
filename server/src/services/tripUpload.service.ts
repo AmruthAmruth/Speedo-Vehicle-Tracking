@@ -4,6 +4,7 @@ import { GPSPointRepository } from '../repositories/gpspoint.repository';
 import { Types } from 'mongoose';
 import mongoose from 'mongoose';
 import { getDistance } from 'geolib';
+import { HTTP_MESSAGES } from '../constants/http.constants';
 
 export class TripUploadService {
   constructor(
@@ -22,7 +23,7 @@ export class TripUploadService {
     const MIN_GPS_POINTS = 2;
     if (rows.length < MIN_GPS_POINTS) {
       throw new Error(
-        `Insufficient GPS points. At least ${MIN_GPS_POINTS} points are required, but only ${rows.length} found.`
+        HTTP_MESSAGES.GENERIC.INSUFFICIENT_GPS_POINTS(MIN_GPS_POINTS, rows.length)
       );
     }
 

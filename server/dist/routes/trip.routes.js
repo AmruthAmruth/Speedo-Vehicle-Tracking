@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const upload_middleware_1 = require("../middleware/upload.middleware");
+const trip_controller_1 = require("../controllers/trip.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const tripRouter = (0, express_1.Router)();
+tripRouter.post('/upload', auth_middleware_1.authMiddleware, upload_middleware_1.upload.single('file'), trip_controller_1.uploadTrip);
+tripRouter.get('/user', auth_middleware_1.authMiddleware, trip_controller_1.getUserTrips);
+tripRouter.get('/:id', auth_middleware_1.authMiddleware, trip_controller_1.getTripById);
+tripRouter.get('/:id/gpspoints', auth_middleware_1.authMiddleware, trip_controller_1.getTripGPSPoints);
+exports.default = tripRouter;
