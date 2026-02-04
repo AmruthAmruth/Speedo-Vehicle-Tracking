@@ -6,13 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const http_constants_1 = require("../constants/http.constants");
+const errors_1 = require("../types/errors");
 const authMiddleware = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(http_constants_1.HTTP_STATUS.UNAUTHORIZED).json({
-                message: http_constants_1.HTTP_MESSAGES.AUTH.AUTHORIZATION_TOKEN_MISSING
-            });
+            throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.AUTHORIZATION_TOKEN_MISSING);
         }
         const token = authHeader.split(' ')[1];
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
@@ -23,9 +22,12 @@ const authMiddleware = (req, res, next) => {
         next();
     }
     catch (error) {
-        return res.status(http_constants_1.HTTP_STATUS.UNAUTHORIZED).json({
-            message: http_constants_1.HTTP_MESSAGES.AUTH.INVALID_OR_EXPIRED_TOKEN
-        });
+        if (error instanceof errors_1.UnauthorizedError) {
+            next(error);
+        }
+        else {
+            next(new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.INVALID_OR_EXPIRED_TOKEN));
+        }
     }
 };
 exports.authMiddleware = authMiddleware;

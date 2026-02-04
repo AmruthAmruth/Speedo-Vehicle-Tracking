@@ -2,24 +2,17 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { UserRepository } from '../repositories/user.repository';
 import { HTTP_STATUS } from '../constants/http.constants';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const authService = new AuthService(new UserRepository());
 
-export const register = async (req: Request, res: Response) => {
-  try {
-    const user = await authService.register(req.body);
-    res.status(HTTP_STATUS.CREATED).json(user);
-  } catch (error: any) {
-    res.status(HTTP_STATUS.BAD_REQUEST).json({ message: error.message });
-  }
-};
+export const register = asyncHandler(async (req: Request, res: Response) => {
+  const user = await authService.register(req.body);
+  res.status(HTTP_STATUS.CREATED).json(user);
+});
 
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.login(req.body);
+  res.status(HTTP_STATUS.OK).json(result);
+});
 
-export const login = async (req: Request, res: Response) => {
-  try {
-    const result = await authService.login(req.body);
-    res.status(HTTP_STATUS.OK).json(result);
-  } catch (error: any) {
-    res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: error.message });
-  }
-};

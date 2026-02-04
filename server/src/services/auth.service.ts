@@ -2,6 +2,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { generateToken } from '../utils/jwt.util';
 import { comparePassword, hashPassword } from '../utils/password.util';
 import { HTTP_MESSAGES } from '../constants/http.constants';
+import { BadRequestError, UnauthorizedError } from '../types/errors';
 
 interface RegisterDTO {
   name: string;
@@ -22,7 +23,7 @@ export class AuthService {
     const existingUser = await this._userRepository.findByEmail(data.email);
 
     if (existingUser) {
-      throw new Error(HTTP_MESSAGES.AUTH.EMAIL_ALREADY_EXISTS);
+      throw new BadRequestError(HTTP_MESSAGES.AUTH.EMAIL_ALREADY_EXISTS);
     }
 
     const hashedPassword = await hashPassword(data.password);
@@ -47,7 +48,7 @@ export class AuthService {
     const user = await this._userRepository.findByEmail(data.email);
 
     if (!user) {
-      throw new Error(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
 
 
@@ -57,7 +58,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new Error(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
 
 

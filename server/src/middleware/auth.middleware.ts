@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { HTTP_STATUS, HTTP_MESSAGES } from '../constants/http.constants';
+import { HTTP_MESSAGES } from '../constants/http.constants';
+import { UnauthorizedError } from '../types/errors';
 
 
 interface JwtPayload {
@@ -32,9 +33,7 @@ export const authMiddleware = (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        message: HTTP_MESSAGES.AUTH.AUTHORIZATION_TOKEN_MISSING
-      });
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.AUTHORIZATION_TOKEN_MISSING);
     }
 
 
@@ -55,8 +54,10 @@ export const authMiddleware = (
 
     next();
   } catch (error) {
-    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-      message: HTTP_MESSAGES.AUTH.INVALID_OR_EXPIRED_TOKEN
-    });
+    if (error instanceof UnauthorizedError) {
+      next(error);
+    } else {
+      next(new UnauthorizedError(HTTP_MESSAGES.AUTH.INVALID_OR_EXPIRED_TOKEN));
+    }
   }
 };
