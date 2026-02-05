@@ -52,7 +52,7 @@ export class CsvService implements ICsvService {
     }
   }
 
-  private validateRequiredColumns(data: any, rowIndex: number): void {
+  private validateRequiredColumns(data: Record<string, unknown>, rowIndex: number): void {
     const requiredColumns = ['latitude', 'longitude', 'timestamp', 'ignition'];
     const missingColumns = requiredColumns.filter(col => !(col in data));
 

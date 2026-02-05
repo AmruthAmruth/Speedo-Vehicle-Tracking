@@ -19,7 +19,7 @@ export interface AuthResponse {
 }
 
 export interface RegisterResponse {
-    id: any;
+    id: string;
     name: string;
     email: string;
 }

@@ -39,7 +39,7 @@ export const HTTP_MESSAGES = {
         FAILED_TO_FETCH_GPS_POINTS: 'Failed to fetch GPS points',
     },
 
-    // Generic Messages
+    // Generic Messages (Updated)
     GENERIC: {
         TOO_MANY_REQUESTS: 'Too many requests, please try again later',
         INSUFFICIENT_GPS_POINTS: (min: number, found: number) =>

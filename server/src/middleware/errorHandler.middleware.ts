@@ -37,7 +37,13 @@ export const errorHandler = (
     });
 
     // Send error response
-    const response: any = {
+    interface ErrorResponse {
+        message: string;
+        error?: string;
+        stack?: string;
+    }
+
+    const response: ErrorResponse = {
         message,
     };
 

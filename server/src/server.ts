@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
+import './di/container';
 import app from './app';
 import { connectDB } from './shared/config/db';
 

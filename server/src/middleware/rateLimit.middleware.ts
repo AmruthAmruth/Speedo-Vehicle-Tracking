@@ -8,9 +8,9 @@ export const globalLimiter = rateLimit({
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     message: {
-        message: HTTP_MESSAGES.GENERIC.TOO_MANY_REQUESTS || 'Too many requests from this IP, please try again after 15 minutes',
+        message: (HTTP_MESSAGES.GENERIC as unknown as { TOO_MANY_REQUESTS: string }).TOO_MANY_REQUESTS || 'Too many requests from this IP, please try again after 15 minutes',
     },
-    statusCode: HTTP_STATUS.TOO_MANY_REQUESTS || 429,
+    statusCode: (HTTP_STATUS as unknown as { TOO_MANY_REQUESTS: number }).TOO_MANY_REQUESTS || 429,
 });
 
 /**
@@ -26,5 +26,5 @@ export const authLimiter = rateLimit({
     message: {
         message: 'Too many login attempts, please try again after 15 minutes',
     },
-    statusCode: HTTP_STATUS.TOO_MANY_REQUESTS || 429,
+    statusCode: (HTTP_STATUS as unknown as { TOO_MANY_REQUESTS: number }).TOO_MANY_REQUESTS || 429,
 });

@@ -48,12 +48,12 @@ export class TripController {
         endTime: result.trip.endTime,
         gpsPointsProcessed: result.pointsCount
       });
-    } catch (error: any) {
-      if (error.name === 'CSVValidationError') {
+    } catch (error) {
+      if (error instanceof CSVValidationError) {
         throw new CSVValidationError(error.message);
       }
 
-      if (error.message?.includes('Invalid file type')) {
+      if (error instanceof Error && error.message?.includes('Invalid file type')) {
         throw new BadRequestError(HTTP_MESSAGES.TRIP.INVALID_FILE_TYPE);
       }
 
