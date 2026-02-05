@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.container = void 0;
+const tsyringe_1 = require("tsyringe");
+Object.defineProperty(exports, "container", { enumerable: true, get: function () { return tsyringe_1.container; } });
+const user_repository_1 = require("../repositories/user.repository");
+const trip_repository_1 = require("../repositories/trip.repository");
+const gpspoint_repository_1 = require("../repositories/gpspoint.repository");
+tsyringe_1.container.register('IUserRepository', { useClass: user_repository_1.UserRepository });
+tsyringe_1.container.register('ITripRepository', { useClass: trip_repository_1.TripRepository });
+tsyringe_1.container.register('IGPSPointRepository', { useClass: gpspoint_repository_1.GPSPointRepository });

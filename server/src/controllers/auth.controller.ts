@@ -1,18 +1,20 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
-import { UserRepository } from '../repositories/user.repository';
-import { HTTP_STATUS } from '../constants/http.constants';
-import { asyncHandler } from '../utils/asyncHandler';
+import { IAuthService } from '../interfaces/IAuthService';
+import { HTTP_STATUS } from '../shared/constants/http.constants';
+import { asyncHandler } from '../shared/utils/asyncHandler';
+import { injectable, inject } from 'tsyringe';
 
-const authService = new AuthService(new UserRepository());
+@injectable()
+export class AuthController {
+  constructor(@inject('IAuthService') private authService: IAuthService) { }
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const user = await authService.register(req.body);
-  res.status(HTTP_STATUS.CREATED).json(user);
-});
+  register = asyncHandler(async (req: Request, res: Response) => {
+    const user = await this.authService.register(req.body);
+    res.status(HTTP_STATUS.CREATED).json(user);
+  });
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.login(req.body);
-  res.status(HTTP_STATUS.OK).json(result);
-});
-
+  login = asyncHandler(async (req: Request, res: Response) => {
+    const result = await this.authService.login(req.body);
+    res.status(HTTP_STATUS.OK).json(result);
+  });
+}

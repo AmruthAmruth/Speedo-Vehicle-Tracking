@@ -1,12 +1,18 @@
 import { GPSPointModel, IGPSPoint } from '../models/GPSPoint.model';
+import { IGPSPointRepository } from '../interfaces/IGPSPointRepository';
 import { ClientSession } from 'mongoose';
+import { injectable } from 'tsyringe';
 
-export class GPSPointRepository {
-  async bulkCreate(points: Partial<IGPSPoint>[], session?: ClientSession) {
+@injectable()
+export class GPSPointRepository implements IGPSPointRepository {
+  async bulkCreate(points: Partial<IGPSPoint>[], session?: ClientSession): Promise<IGPSPoint[]> {
+    let result;
     if (session) {
-      return GPSPointModel.insertMany(points, { session });
+      result = await GPSPointModel.insertMany(points, { session });
+    } else {
+      result = await GPSPointModel.insertMany(points);
     }
-    return GPSPointModel.insertMany(points);
+    return result as unknown as IGPSPoint[];
   }
 
   async findByTripId(tripId: string) {

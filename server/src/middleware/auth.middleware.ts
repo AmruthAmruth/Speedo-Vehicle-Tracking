@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { HTTP_MESSAGES } from '../constants/http.constants';
-import { UnauthorizedError } from '../types/errors';
+import { HTTP_MESSAGES } from '../shared/constants/http.constants';
+import { UnauthorizedError } from '../shared/types/errors';
 
 
 interface JwtPayload {

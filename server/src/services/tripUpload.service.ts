@@ -1,15 +1,19 @@
-import { parseCSV } from './csv.service';
-import { TripRepository } from '../repositories/trip.repository';
-import { GPSPointRepository } from '../repositories/gpspoint.repository';
+import { ICsvService } from '../interfaces/ICsvService';
+import { ITripUploadService } from '../interfaces/ITripUploadService';
+import { ITripRepository } from '../interfaces/ITripRepository';
+import { IGPSPointRepository } from '../interfaces/IGPSPointRepository';
 import { Types } from 'mongoose';
 import mongoose from 'mongoose';
 import { getDistance } from 'geolib';
-import { HTTP_MESSAGES } from '../constants/http.constants';
+import { HTTP_MESSAGES } from '../shared/constants/http.constants';
+import { injectable, inject } from 'tsyringe';
 
-export class TripUploadService {
+@injectable()
+export class TripUploadService implements ITripUploadService {
   constructor(
-    private _tripRepo: TripRepository,
-    private _gpsRepo: GPSPointRepository
+    @inject('ITripRepository') private _tripRepo: ITripRepository,
+    @inject('IGPSPointRepository') private _gpsRepo: IGPSPointRepository,
+    @inject('ICsvService') private _csvService: ICsvService
   ) { }
 
   async uploadTrip(
@@ -17,7 +21,7 @@ export class TripUploadService {
     fileBuffer: Buffer
   ) {
     // 1. Parse CSV
-    const rows = await parseCSV(fileBuffer);
+    const rows = await this._csvService.parseCSV(fileBuffer);
 
     // 2. Validate minimum GPS points
     const MIN_GPS_POINTS = 2;

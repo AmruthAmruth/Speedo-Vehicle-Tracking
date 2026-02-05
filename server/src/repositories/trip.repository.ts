@@ -1,7 +1,10 @@
 import { TripModel, ITrip } from '../models/Trip.model';
+import { ITripRepository } from '../interfaces/ITripRepository';
 import { ClientSession } from 'mongoose';
+import { injectable } from 'tsyringe';
 
-export class TripRepository {
+@injectable()
+export class TripRepository implements ITripRepository {
   async create(data: Partial<ITrip>, session?: ClientSession) {
     if (session) {
       return TripModel.create([data], { session }).then(trips => trips[0]);

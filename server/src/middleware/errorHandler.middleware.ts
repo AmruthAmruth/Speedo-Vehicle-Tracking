@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../types/errors';
-import { HTTP_STATUS } from '../constants/http.constants';
+import { AppError } from '../shared/types/errors';
+import { HTTP_STATUS } from '../shared/constants/http.constants';
 
 /**
  * Global Error Handler Middleware

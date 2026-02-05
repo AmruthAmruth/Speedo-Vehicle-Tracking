@@ -1,25 +1,16 @@
-import { UserRepository } from '../repositories/user.repository';
-import { generateToken } from '../utils/jwt.util';
-import { comparePassword, hashPassword } from '../utils/password.util';
-import { HTTP_MESSAGES } from '../constants/http.constants';
-import { BadRequestError, UnauthorizedError } from '../types/errors';
+import { IUserRepository } from '../interfaces/IUserRepository';
+import { IAuthService, RegisterDTO, LoginDTO, AuthResponse, RegisterResponse } from '../interfaces/IAuthService';
+import { generateToken } from '../shared/utils/jwt.util';
+import { comparePassword, hashPassword } from '../shared/utils/password.util';
+import { HTTP_MESSAGES } from '../shared/constants/http.constants';
+import { BadRequestError, UnauthorizedError } from '../shared/types/errors';
+import { injectable, inject } from 'tsyringe';
 
-interface RegisterDTO {
-  name: string;
-  email: string;
-  password: string;
-}
+@injectable()
+export class AuthService implements IAuthService {
+  constructor(@inject('IUserRepository') private _userRepository: IUserRepository) { }
 
-
-interface LoginDTO {
-  email: string;
-  password: string;
-}
-
-export class AuthService {
-  constructor(private _userRepository: UserRepository) { }
-
-  async register(data: RegisterDTO) {
+  async register(data: RegisterDTO): Promise<RegisterResponse> {
     const existingUser = await this._userRepository.findByEmail(data.email);
 
     if (existingUser) {
@@ -41,16 +32,12 @@ export class AuthService {
     };
   }
 
-
-
-  async login(data: LoginDTO) {
-
+  async login(data: LoginDTO): Promise<AuthResponse> {
     const user = await this._userRepository.findByEmail(data.email);
 
     if (!user) {
       throw new UnauthorizedError(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
-
 
     const isPasswordValid = await comparePassword(
       data.password,
@@ -61,12 +48,10 @@ export class AuthService {
       throw new UnauthorizedError(HTTP_MESSAGES.AUTH.INVALID_EMAIL_OR_PASSWORD);
     }
 
-
     const token = generateToken({
       userId: user._id.toString(),
       email: user.email
     });
-
 
     return {
       token,
@@ -77,6 +62,4 @@ export class AuthService {
       }
     };
   }
-
-
 }

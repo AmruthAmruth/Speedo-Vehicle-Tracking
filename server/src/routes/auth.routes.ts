@@ -1,8 +1,13 @@
 import { Router } from 'express';
-import { login, register } from '../controllers/auth.controller';
+import { AuthController } from '../controllers/auth.controller';
+import { validate } from '../middleware/validate.middleware';
+import { registerSchema, loginSchema } from '../shared/validators/auth.validator';
+import { authLimiter } from '../middleware/rateLimit.middleware';
+import { container } from 'tsyringe';
 
 const router = Router();
+const authController = container.resolve(AuthController);
 
-router.post('/register', register);
-router.post('/login',login)
+router.post('/register', authLimiter, validate(registerSchema), authController.register);
+router.post('/login', authLimiter, validate(loginSchema), authController.login);
 export default router;

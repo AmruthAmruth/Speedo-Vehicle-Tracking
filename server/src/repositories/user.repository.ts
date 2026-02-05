@@ -1,6 +1,9 @@
 import { IUser, UserModel } from '../models/User.model';
+import { IUserRepository } from '../interfaces/IUserRepository';
+import { injectable } from 'tsyringe';
 
-export class UserRepository {
+@injectable()
+export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     return UserModel.findOne({ email });
   }

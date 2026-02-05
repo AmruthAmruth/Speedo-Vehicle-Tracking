@@ -1,10 +1,10 @@
 import { Response } from 'express';
-import { TripUploadService } from '../services/tripUpload.service';
-import { TripRepository } from '../repositories/trip.repository';
-import { GPSPointRepository } from '../repositories/gpspoint.repository';
+import { ITripUploadService } from '../interfaces/ITripUploadService';
+import { ITripRepository } from '../interfaces/ITripRepository';
+import { IGPSPointRepository } from '../interfaces/IGPSPointRepository';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { HTTP_STATUS, HTTP_MESSAGES } from '../constants/http.constants';
-import { asyncHandler } from '../utils/asyncHandler';
+import { HTTP_STATUS, HTTP_MESSAGES } from '../shared/constants/http.constants';
+import { asyncHandler } from '../shared/utils/asyncHandler';
 import {
   UnauthorizedError,
   BadRequestError,
@@ -12,115 +12,117 @@ import {
   ForbiddenError,
   InternalServerError,
   CSVValidationError
-} from '../types/errors';
+} from '../shared/types/errors';
+import { injectable, inject } from 'tsyringe';
 
-const service = new TripUploadService(
-  new TripRepository(),
-  new GPSPointRepository()
-);
+@injectable()
+export class TripController {
+  constructor(
+    @inject('ITripUploadService') private service: ITripUploadService,
+    @inject('ITripRepository') private tripRepo: ITripRepository,
+    @inject('IGPSPointRepository') private gpsRepo: IGPSPointRepository
+  ) { }
 
-const tripRepo = new TripRepository();
-const gpsRepo = new GPSPointRepository();
+  uploadTrip = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+    }
 
-export const uploadTrip = asyncHandler(async (
-  req: AuthRequest,
-  res: Response
-) => {
-  if (!req.user) {
-    throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
-  }
+    if (!req.file) {
+      throw new BadRequestError(HTTP_MESSAGES.TRIP.NO_FILE_UPLOADED);
+    }
 
-  if (!req.file) {
-    throw new BadRequestError(HTTP_MESSAGES.TRIP.NO_FILE_UPLOADED);
-  }
+    try {
+      const result = await this.service.uploadTrip(
+        req.user.userId,
+        req.file.buffer
+      );
 
-  try {
-    const result = await service.uploadTrip(
-      req.user.userId,
-      req.file.buffer
-    );
+      res.status(HTTP_STATUS.CREATED).json({
+        message: HTTP_MESSAGES.TRIP.TRIP_UPLOADED_SUCCESSFULLY,
+        tripId: result.trip._id,
+        startTime: result.trip.startTime,
+        endTime: result.trip.endTime,
+        gpsPointsProcessed: result.pointsCount
+      });
+    } catch (error: any) {
+      if (error.name === 'CSVValidationError') {
+        throw new CSVValidationError(error.message);
+      }
 
-    res.status(HTTP_STATUS.CREATED).json({
-      message: HTTP_MESSAGES.TRIP.TRIP_UPLOADED_SUCCESSFULLY,
-      tripId: result.trip._id,
-      startTime: result.trip.startTime,
-      endTime: result.trip.endTime,
-      gpsPointsProcessed: result.pointsCount
+      if (error.message?.includes('Invalid file type')) {
+        throw new BadRequestError(HTTP_MESSAGES.TRIP.INVALID_FILE_TYPE);
+      }
+
+      throw new InternalServerError(HTTP_MESSAGES.TRIP.FAILED_TO_UPLOAD_TRIP);
+    }
+  });
+
+  getUserTrips = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+    }
+
+    const trips = await this.tripRepo.findByUserId(req.user.userId);
+
+    res.status(HTTP_STATUS.OK).json({
+      trips,
+      count: trips.length
     });
-  } catch (error: any) {
-    if (error.name === 'CSVValidationError') {
-      throw new CSVValidationError(error.message);
+  });
+
+  getTripById = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
     }
 
-    if (error.message?.includes('Invalid file type')) {
-      throw new BadRequestError(HTTP_MESSAGES.TRIP.INVALID_FILE_TYPE);
+    const { id } = req.params;
+    const trip = await this.tripRepo.findById(id as string);
+
+    if (!trip) {
+      throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
     }
 
-    throw new InternalServerError(HTTP_MESSAGES.TRIP.FAILED_TO_UPLOAD_TRIP);
-  }
-});
+    if (trip.userId.toString() !== req.user.userId) {
+      throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
+    }
 
-export const getUserTrips = asyncHandler(async (
-  req: AuthRequest,
-  res: Response
-) => {
-  if (!req.user) {
-    throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
-  }
-
-  const trips = await tripRepo.findByUserId(req.user.userId);
-
-  res.status(HTTP_STATUS.OK).json({
-    trips,
-    count: trips.length
+    res.status(HTTP_STATUS.OK).json(trip);
   });
-});
 
-export const getTripById = asyncHandler(async (
-  req: AuthRequest,
-  res: Response
-) => {
-  if (!req.user) {
-    throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
-  }
+  getTripGPSPoints = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+    }
 
-  const { id } = req.params;
-  const trip = await tripRepo.findById(id as string);
+    const { id } = req.params;
 
-  if (!trip) {
-    throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
-  }
+    const trip = await this.tripRepo.findById(id as string);
+    if (!trip) {
+      throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
+    }
 
-  if (trip.userId.toString() !== req.user.userId) {
-    throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
-  }
+    if (trip.userId.toString() !== req.user.userId) {
+      throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
+    }
 
-  res.status(HTTP_STATUS.OK).json(trip);
-});
+    const gpsPoints = await this.gpsRepo.findByTripId(id as string);
 
-export const getTripGPSPoints = asyncHandler(async (
-  req: AuthRequest,
-  res: Response
-) => {
-  if (!req.user) {
-    throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
-  }
-
-  const { id } = req.params;
-
-  const trip = await tripRepo.findById(id as string);
-  if (!trip) {
-    throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
-  }
-
-  if (trip.userId.toString() !== req.user.userId) {
-    throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
-  }
-
-  const gpsPoints = await gpsRepo.findByTripId(id as string);
-
-  res.status(HTTP_STATUS.OK).json({
-    gpsPoints,
-    count: gpsPoints.length
+    res.status(HTTP_STATUS.OK).json({
+      gpsPoints,
+      count: gpsPoints.length
+    });
   });
-});
+}

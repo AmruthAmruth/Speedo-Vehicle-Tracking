@@ -1,34 +1,36 @@
 import { Router } from 'express';
 
 import { upload } from '../middleware/upload.middleware';
-import { uploadTrip, getUserTrips, getTripById, getTripGPSPoints } from '../controllers/trip.controller';
+import { TripController } from '../controllers/trip.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { container } from 'tsyringe';
 
 const tripRouter = Router();
+const tripController = container.resolve(TripController);
 
 tripRouter.post(
   '/upload',
   authMiddleware,
   upload.single('file'),
-  uploadTrip
+  tripController.uploadTrip
 );
 
 tripRouter.get(
   '/user',
   authMiddleware,
-  getUserTrips
+  tripController.getUserTrips
 );
 
 tripRouter.get(
   '/:id',
   authMiddleware,
-  getTripById
+  tripController.getTripById
 );
 
 tripRouter.get(
   '/:id/gpspoints',
   authMiddleware,
-  getTripGPSPoints
+  tripController.getTripGPSPoints
 );
 
 export default tripRouter;
