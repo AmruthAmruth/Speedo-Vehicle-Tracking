@@ -9,16 +9,20 @@ import TripUpload from './features/dashboard/pages/TripUpload';
 import TripList from './features/dashboard/pages/TripList';
 import TripDetails from './features/dashboard/pages/TripDetails';
 
+import { APP_ROUTES } from './constants/routes';
+
+// ... (other imports)
+
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path={APP_ROUTES.HOME} element={<LandingPage />} />
+      <Route path={APP_ROUTES.LOGIN} element={<Login />} />
+      <Route path={APP_ROUTES.REGISTER} element={<Register />} />
 
       {/* Protected Dashboard Routes */}
       <Route
-        path="/dashboard"
+        path={APP_ROUTES.DASHBOARD.ROOT}
         element={
           <ProtectedRoute>
             <DashboardLayout />
@@ -26,9 +30,9 @@ const App = () => {
         }
       >
         <Route index element={<DashboardOverview />} />
-        <Route path="upload" element={<TripUpload />} />
-        <Route path="trips" element={<TripList />} />
-        <Route path="trips/:id" element={<TripDetails />} />
+        <Route path={APP_ROUTES.DASHBOARD.UPLOAD} element={<TripUpload />} />
+        <Route path={APP_ROUTES.DASHBOARD.TRIPS} element={<TripList />} />
+        <Route path={APP_ROUTES.DASHBOARD.TRIP_DETAILS} element={<TripDetails />} />
       </Route>
     </Routes>
   );

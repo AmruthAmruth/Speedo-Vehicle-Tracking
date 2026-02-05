@@ -1,14 +1,15 @@
 import api from './api';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types/auth.types';
+import { API_ROUTES } from '../constants/api';
 
 export const authApi = {
     login: async (data: LoginRequest): Promise<LoginResponse> => {
-        const response = await api.post<LoginResponse>('/api/login', data);
+        const response = await api.post<LoginResponse>(API_ROUTES.AUTH.LOGIN, data);
         return response.data;
     },
 
     register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-        const response = await api.post<RegisterResponse>('/api/register', data);
+        const response = await api.post<RegisterResponse>(API_ROUTES.AUTH.REGISTER, data);
         return response.data;
     },
 };

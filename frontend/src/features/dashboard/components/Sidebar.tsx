@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { COLORS } from '../../../constants/constants';
+import { APP_ROUTES } from '../../../constants/routes';
 import SpeedIcon from '@mui/icons-material/Speed';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -15,11 +16,11 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const menuItems = [
-        { path: '/dashboard', icon: <DashboardIcon />, label: 'Overview' },
-        { path: '/dashboard/upload', icon: <UploadFileIcon />, label: 'Upload Trip' },
-        { path: '/dashboard/trips', icon: <HistoryIcon />, label: 'Trip History' },
-        { path: '/dashboard/analytics', icon: <BarChartIcon />, label: 'Analytics' },
-        { path: '/dashboard/settings', icon: <SettingsIcon />, label: 'Settings' },
+        { path: APP_ROUTES.DASHBOARD.ROOT, icon: <DashboardIcon />, label: 'Overview' },
+        { path: `${APP_ROUTES.DASHBOARD.ROOT}/${APP_ROUTES.DASHBOARD.UPLOAD}`, icon: <UploadFileIcon />, label: 'Upload Trip' },
+        { path: `${APP_ROUTES.DASHBOARD.ROOT}/${APP_ROUTES.DASHBOARD.TRIPS}`, icon: <HistoryIcon />, label: 'Trip History' },
+        { path: `${APP_ROUTES.DASHBOARD.ROOT}/${APP_ROUTES.DASHBOARD.ANALYTICS}`, icon: <BarChartIcon />, label: 'Analytics' },
+        { path: `${APP_ROUTES.DASHBOARD.ROOT}/${APP_ROUTES.DASHBOARD.SETTINGS}`, icon: <SettingsIcon />, label: 'Settings' },
     ];
 
     return (
@@ -36,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                     <NavLink
                         key={item.path}
                         to={item.path}
-                        end={item.path === '/dashboard'}
+                        end={item.path === APP_ROUTES.DASHBOARD.ROOT}
                         className={({ isActive }) =>
                             `sidebar-link ${isActive ? 'active' : ''}`
                         }

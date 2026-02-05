@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { COLORS } from '../../../constants/constants';
+import { APP_ROUTES } from '../../../constants/routes';
 import SpeedIcon from '@mui/icons-material/Speed';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import '../styles/auth.css';
@@ -94,7 +95,7 @@ const Register: React.FC = () => {
         try {
             await register(formData.name, formData.email, formData.password);
             // Redirect to dashboard after successful registration
-            navigate('/dashboard');
+            navigate(APP_ROUTES.DASHBOARD.ROOT);
         } catch (error: any) {
             setErrors(prev => ({
                 ...prev,
@@ -126,7 +127,7 @@ const Register: React.FC = () => {
 
             {/* Back to Home */}
             <div className="back-to-home">
-                <Link to="/">
+                <Link to={APP_ROUTES.HOME}>
                     <ArrowBackIcon />
                     <span>Back to Home</span>
                 </Link>
@@ -246,7 +247,7 @@ const Register: React.FC = () => {
 
                         <div className="auth-switch">
                             Already have an account?
-                            <Link to="/login">Sign in</Link>
+                            <Link to={APP_ROUTES.LOGIN}>Sign in</Link>
                         </div>
                     </div>
                 </div>

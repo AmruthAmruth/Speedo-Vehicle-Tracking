@@ -1,5 +1,6 @@
 import api from './api';
 import { TripUploadResponse, GetTripsResponse, Trip, GetGPSPointsResponse } from '../types/trip.types';
+import { API_ROUTES } from '../constants/api';
 
 export const tripApi = {
     // Upload a trip CSV file
@@ -7,7 +8,7 @@ export const tripApi = {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await api.post<TripUploadResponse>('/trip/upload', formData, {
+        const response = await api.post<TripUploadResponse>(API_ROUTES.TRIP.UPLOAD, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -17,19 +18,19 @@ export const tripApi = {
 
     // Get all trips for the authenticated user
     getUserTrips: async (): Promise<GetTripsResponse> => {
-        const response = await api.get<GetTripsResponse>('/trip/user');
+        const response = await api.get<GetTripsResponse>(API_ROUTES.TRIP.USER_TRIPS);
         return response.data;
     },
 
     // Get a specific trip by ID
     getTripById: async (id: string): Promise<Trip> => {
-        const response = await api.get<Trip>(`/trip/${id}`);
+        const response = await api.get<Trip>(API_ROUTES.TRIP.GET_BY_ID(id));
         return response.data;
     },
 
     // Get GPS points for a specific trip
     getTripGPSPoints: async (id: string): Promise<GetGPSPointsResponse> => {
-        const response = await api.get<GetGPSPointsResponse>(`/trip/${id}/gpspoints`);
+        const response = await api.get<GetGPSPointsResponse>(API_ROUTES.TRIP.GET_GPS_POINTS(id));
         return response.data;
     },
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { COLORS } from '../../../constants/constants';
+import { APP_ROUTES } from '../../../constants/routes';
 import SpeedIcon from '@mui/icons-material/Speed';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import '../styles/auth.css';
@@ -75,7 +76,7 @@ const Login: React.FC = () => {
         try {
             await login(formData.email, formData.password);
             // Redirect to dashboard or home after successful login
-            navigate('/dashboard');
+            navigate(APP_ROUTES.DASHBOARD.ROOT);
         } catch (error: any) {
             setErrors(prev => ({
                 ...prev,
@@ -92,7 +93,7 @@ const Login: React.FC = () => {
 
             {/* Back to Home */}
             <div className="back-to-home">
-                <Link to="/">
+                <Link to={APP_ROUTES.HOME}>
                     <ArrowBackIcon />
                     <span>Back to Home</span>
                 </Link>
@@ -191,7 +192,7 @@ const Login: React.FC = () => {
 
                         <div className="auth-switch">
                             Don't have an account?
-                            <Link to="/register">Sign up</Link>
+                            <Link to={APP_ROUTES.REGISTER}>Sign up</Link>
                         </div>
                     </div>
                 </div>

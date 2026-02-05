@@ -49,7 +49,7 @@ const DashboardLayout: React.FC = () => {
                             </div>
                         </div>
                         <button className="logout-btn" onClick={handleLogout}>
-                            <span className="material-icons">logout</span>
+                           
                             Logout
                         </button>
                     </div>
