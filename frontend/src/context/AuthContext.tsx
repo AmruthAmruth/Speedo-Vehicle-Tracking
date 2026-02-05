@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 import { authApi } from '../services/authApi';
 import { User, AuthContextType } from '../types/auth.types';
 
@@ -44,8 +45,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Update state
             setToken(response.token);
             setUser(response.user);
-        } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Login failed');
+        } catch (error: unknown) {
+            let errorMessage = 'Login failed';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            throw new Error(errorMessage);
         }
     };
 
@@ -55,8 +62,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // After registration, automatically log in
             await login(email, password);
-        } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Registration failed');
+        } catch (error: unknown) {
+            let errorMessage = 'Registration failed';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            throw new Error(errorMessage);
         }
     };
 

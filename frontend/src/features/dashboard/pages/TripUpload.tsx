@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { tripApi } from '../../../services/tripApi';
 import { validateCSVFile } from '../../../utils/tripUtils';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -84,8 +85,14 @@ const TripUpload: React.FC = () => {
             setTimeout(() => {
                 navigate(`/dashboard/trips/${response.tripId}`);
             }, 2000);
-        } catch (error: any) {
-            setUploadError(error.response?.data?.message || 'Failed to upload trip');
+        } catch (error: unknown) {
+            let message = 'Failed to upload trip';
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            setUploadError(message);
             setUploadProgress(0);
         } finally {
             setUploading(false);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import { COLORS } from '../../../constants/constants';
 import { APP_ROUTES } from '../../../constants/routes';
@@ -77,10 +78,16 @@ const Login: React.FC = () => {
             await login(formData.email, formData.password);
             // Redirect to dashboard or home after successful login
             navigate(APP_ROUTES.DASHBOARD.ROOT);
-        } catch (error: any) {
+        } catch (error: unknown) {
+            let errorMessage = 'Login failed. Please try again.';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
             setErrors(prev => ({
                 ...prev,
-                general: error.message || 'Login failed. Please try again.',
+                general: errorMessage,
             }));
         } finally {
             setIsLoading(false);
