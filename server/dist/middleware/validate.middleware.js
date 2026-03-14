@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validate = void 0;
 const zod_1 = require("zod");
-const http_constants_1 = require("../constants/http.constants");
+const http_constants_1 = require("../shared/constants/http.constants");
 const validate = (schema) => async (req, res, next) => {
     try {
         await schema.parseAsync({
@@ -14,9 +14,10 @@ const validate = (schema) => async (req, res, next) => {
     }
     catch (error) {
         if (error instanceof zod_1.ZodError) {
+            const zodError = error;
             return res.status(http_constants_1.HTTP_STATUS.BAD_REQUEST).json({
                 message: 'Validation failed',
-                errors: error.errors.map((e) => ({
+                errors: zodError.errors.map((e) => ({
                     field: e.path.join('.'),
                     message: e.message,
                 })),

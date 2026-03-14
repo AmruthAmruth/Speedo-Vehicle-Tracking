@@ -5,9 +5,9 @@ export interface ITrip extends Document {
   name: string;                
   startTime: Date;
   endTime: Date;
-  totalDistance: number;       // meters
-  totalIdlingTime: number;     // seconds
-  totalStoppageTime: number;   // seconds
+  totalDistance: number;        
+  totalIdlingTime: number;      
+  totalStoppageTime: number;    
   createdAt: Date;
 }
 

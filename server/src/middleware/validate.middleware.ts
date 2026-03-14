@@ -13,7 +13,7 @@ export const validate = (schema: z.ZodSchema) =>
             return next();
         } catch (error) {
             if (error instanceof ZodError) {
-                // Define expected shape
+                 
                 interface ZodErrorLike {
                     errors: Array<{
                         path: (string | number)[];
@@ -21,7 +21,7 @@ export const validate = (schema: z.ZodSchema) =>
                     }>;
                 }
 
-                // Cast through unknown to avoid 'any'
+                 
                 const zodError = error as unknown as ZodErrorLike;
 
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({

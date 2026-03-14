@@ -6,6 +6,12 @@ Object.defineProperty(exports, "container", { enumerable: true, get: function ()
 const user_repository_1 = require("../repositories/user.repository");
 const trip_repository_1 = require("../repositories/trip.repository");
 const gpspoint_repository_1 = require("../repositories/gpspoint.repository");
+const auth_service_1 = require("../services/auth.service");
+const tripUpload_service_1 = require("../services/tripUpload.service");
+const csv_service_1 = require("../services/csv.service");
 tsyringe_1.container.register('IUserRepository', { useClass: user_repository_1.UserRepository });
 tsyringe_1.container.register('ITripRepository', { useClass: trip_repository_1.TripRepository });
 tsyringe_1.container.register('IGPSPointRepository', { useClass: gpspoint_repository_1.GPSPointRepository });
+tsyringe_1.container.register('IAuthService', { useClass: auth_service_1.AuthService });
+tsyringe_1.container.register('ITripUploadService', { useClass: tripUpload_service_1.TripUploadService });
+tsyringe_1.container.register('ICsvService', { useClass: csv_service_1.CsvService });

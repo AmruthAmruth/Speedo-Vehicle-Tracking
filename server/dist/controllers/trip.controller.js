@@ -13,10 +13,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TripController = void 0;
-const tripUpload_service_1 = require("../services/tripUpload.service");
-const http_constants_1 = require("../constants/http.constants");
-const asyncHandler_1 = require("../utils/asyncHandler");
-const errors_1 = require("../types/errors");
+const http_constants_1 = require("../shared/constants/http.constants");
+const asyncHandler_1 = require("../shared/utils/asyncHandler");
+const errors_1 = require("../shared/types/errors");
 const tsyringe_1 = require("tsyringe");
 let TripController = class TripController {
     constructor(service, tripRepo, gpsRepo) {
@@ -41,10 +40,10 @@ let TripController = class TripController {
                 });
             }
             catch (error) {
-                if (error.name === 'CSVValidationError') {
+                if (error instanceof errors_1.CSVValidationError) {
                     throw new errors_1.CSVValidationError(error.message);
                 }
-                if (error.message?.includes('Invalid file type')) {
+                if (error instanceof Error && error.message?.includes('Invalid file type')) {
                     throw new errors_1.BadRequestError(http_constants_1.HTTP_MESSAGES.TRIP.INVALID_FILE_TYPE);
                 }
                 throw new errors_1.InternalServerError(http_constants_1.HTTP_MESSAGES.TRIP.FAILED_TO_UPLOAD_TRIP);
@@ -97,7 +96,8 @@ let TripController = class TripController {
 exports.TripController = TripController;
 exports.TripController = TripController = __decorate([
     (0, tsyringe_1.injectable)(),
+    __param(0, (0, tsyringe_1.inject)('ITripUploadService')),
     __param(1, (0, tsyringe_1.inject)('ITripRepository')),
     __param(2, (0, tsyringe_1.inject)('IGPSPointRepository')),
-    __metadata("design:paramtypes", [tripUpload_service_1.TripUploadService, Object, Object])
+    __metadata("design:paramtypes", [Object, Object, Object])
 ], TripController);

@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const http_constants_1 = require("../constants/http.constants");
-const errors_1 = require("../types/errors");
+const http_constants_1 = require("../shared/constants/http.constants");
+const errors_1 = require("../shared/types/errors");
 const authMiddleware = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;

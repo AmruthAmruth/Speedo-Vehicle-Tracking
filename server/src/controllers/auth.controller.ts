@@ -6,15 +6,15 @@ import { injectable, inject } from 'tsyringe';
 
 @injectable()
 export class AuthController {
-  constructor(@inject('IAuthService') private authService: IAuthService) { }
+  constructor(@inject('IAuthService') private _authService: IAuthService) { }
 
   register = asyncHandler(async (req: Request, res: Response) => {
-    const user = await this.authService.register(req.body);
+    const user = await this._authService.register(req.body);
     res.status(HTTP_STATUS.CREATED).json(user);
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
-    const result = await this.authService.login(req.body);
+    const result = await this._authService.login(req.body);
     res.status(HTTP_STATUS.OK).json(result);
   });
 }

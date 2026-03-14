@@ -6,12 +6,12 @@ import { AuthService } from '../services/auth.service';
 import { TripUploadService } from '../services/tripUpload.service';
 import { CsvService } from '../services/csv.service';
 
-// Repositories
+ 
 container.register('IUserRepository', { useClass: UserRepository });
 container.register('ITripRepository', { useClass: TripRepository });
 container.register('IGPSPointRepository', { useClass: GPSPointRepository });
 
-// Services
+ 
 container.register('IAuthService', { useClass: AuthService });
 container.register('ITripUploadService', { useClass: TripUploadService });
 container.register('ICsvService', { useClass: CsvService });

@@ -1,5 +1,7 @@
- 
-export const HTTP_STATUS = {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.HTTP_MESSAGES = exports.HTTP_STATUS = void 0;
+exports.HTTP_STATUS = {
     OK: 200,
     CREATED: 201,
     BAD_REQUEST: 400,
@@ -8,11 +10,8 @@ export const HTTP_STATUS = {
     NOT_FOUND: 404,
     TOO_MANY_REQUESTS: 429,
     INTERNAL_SERVER_ERROR: 500,
-} as const;
-
- 
-export const HTTP_MESSAGES = {
-     
+};
+exports.HTTP_MESSAGES = {
     AUTH: {
         USER_NOT_AUTHENTICATED: 'User not authenticated',
         AUTHORIZATION_TOKEN_MISSING: 'Authorization token missing',
@@ -20,8 +19,6 @@ export const HTTP_MESSAGES = {
         EMAIL_ALREADY_EXISTS: 'Email already exists',
         INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password',
     },
-
-     
     TRIP: {
         NO_FILE_UPLOADED: 'No file uploaded',
         TRIP_UPLOADED_SUCCESSFULLY: 'Trip uploaded successfully',
@@ -34,11 +31,8 @@ export const HTTP_MESSAGES = {
         FAILED_TO_FETCH_TRIP: 'Failed to fetch trip',
         FAILED_TO_FETCH_GPS_POINTS: 'Failed to fetch GPS points',
     },
-
-     
     GENERIC: {
         TOO_MANY_REQUESTS: 'Too many requests, please try again later',
-        INSUFFICIENT_GPS_POINTS: (min: number, found: number) =>
-            `Insufficient GPS points. At least ${min} points are required, but only ${found} found.`,
+        INSUFFICIENT_GPS_POINTS: (min, found) => `Insufficient GPS points. At least ${min} points are required, but only ${found} found.`,
     },
-} as const;
+};

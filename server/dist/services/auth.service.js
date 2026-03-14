@@ -13,10 +13,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
-const jwt_util_1 = require("../utils/jwt.util");
-const password_util_1 = require("../utils/password.util");
-const http_constants_1 = require("../constants/http.constants");
-const errors_1 = require("../types/errors");
+const jwt_util_1 = require("../shared/utils/jwt.util");
+const password_util_1 = require("../shared/utils/password.util");
+const http_constants_1 = require("../shared/constants/http.constants");
+const errors_1 = require("../shared/types/errors");
 const tsyringe_1 = require("tsyringe");
 let AuthService = class AuthService {
     constructor(_userRepository) {
@@ -34,7 +34,7 @@ let AuthService = class AuthService {
             password: hashedPassword
         });
         return {
-            id: user._id,
+            id: user._id.toString(),
             name: user.name,
             email: user.email
         };

@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Apply Global Rate Limiter
+ 
 app.use(globalLimiter);
 
 app.use('/api', router);
@@ -22,10 +22,10 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// 404 Handler - Must be after all routes
+ 
 app.use(notFoundHandler);
 
-// Global Error Handler - Must be last
+ 
 app.use(errorHandler);
 
 export default app;

@@ -74,10 +74,10 @@ export class CsvService implements ICsvService {
         .pipe(csv())
         .on('data', (data) => {
           try {
-            // Validate required columns exist
+             
             this.validateRequiredColumns(data, rowIndex);
 
-            // Parse and validate data
+             
             const latitude = Number(data.latitude);
             const longitude = Number(data.longitude);
             const timestamp = data.timestamp;
@@ -97,7 +97,7 @@ export class CsvService implements ICsvService {
 
             rowIndex++;
           } catch (error) {
-            // Stop parsing and reject with validation error
+             
             stream.destroy();
             reject(error);
           }

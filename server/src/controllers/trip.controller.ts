@@ -18,9 +18,9 @@ import { injectable, inject } from 'tsyringe';
 @injectable()
 export class TripController {
   constructor(
-    @inject('ITripUploadService') private service: ITripUploadService,
-    @inject('ITripRepository') private tripRepo: ITripRepository,
-    @inject('IGPSPointRepository') private gpsRepo: IGPSPointRepository
+    @inject('ITripUploadService') private _service: ITripUploadService,
+    @inject('ITripRepository') private _tripRepo: ITripRepository,
+    @inject('IGPSPointRepository') private _gpsRepo: IGPSPointRepository
   ) { }
 
   uploadTrip = asyncHandler(async (
@@ -36,7 +36,7 @@ export class TripController {
     }
 
     try {
-      const result = await this.service.uploadTrip(
+      const result = await this._service.uploadTrip(
         req.user.userId,
         req.file.buffer
       );
@@ -69,7 +69,7 @@ export class TripController {
       throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
     }
 
-    const trips = await this.tripRepo.findByUserId(req.user.userId);
+    const trips = await this._tripRepo.findByUserId(req.user.userId);
 
     res.status(HTTP_STATUS.OK).json({
       trips,
@@ -86,7 +86,7 @@ export class TripController {
     }
 
     const { id } = req.params;
-    const trip = await this.tripRepo.findById(id as string);
+    const trip = await this._tripRepo.findById(id as string);
 
     if (!trip) {
       throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
@@ -109,7 +109,7 @@ export class TripController {
 
     const { id } = req.params;
 
-    const trip = await this.tripRepo.findById(id as string);
+    const trip = await this._tripRepo.findById(id as string);
     if (!trip) {
       throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
     }
@@ -118,7 +118,7 @@ export class TripController {
       throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
     }
 
-    const gpsPoints = await this.gpsRepo.findByTripId(id as string);
+    const gpsPoints = await this._gpsRepo.findByTripId(id as string);
 
     res.status(HTTP_STATUS.OK).json({
       gpsPoints,
