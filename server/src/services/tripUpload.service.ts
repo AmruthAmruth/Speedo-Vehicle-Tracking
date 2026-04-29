@@ -20,10 +20,15 @@ export class TripUploadService implements ITripUploadService {
     userId: string,
     fileBuffer: Buffer
   ) {
-     
-    const rows = await this._csvService.parseCSV(fileBuffer);
+    // 1. Parse CSV
+    const rawRows = await this._csvService.parseCSV(fileBuffer);
 
-     
+    // 2. Sort rows chronologically (FIX: Sorting issue)
+    const rows = [...rawRows].sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    // 3. Basic validation
     const MIN_GPS_POINTS = 2;
     if (rows.length < MIN_GPS_POINTS) {
       throw new Error(
@@ -31,64 +36,73 @@ export class TripUploadService implements ITripUploadService {
       );
     }
 
-     
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-       
+      // 4. Create Trip
       const trip = await this._tripRepo.create({
         userId: new Types.ObjectId(userId),
         startTime: new Date(rows[0].timestamp),
         endTime: new Date(rows[rows.length - 1].timestamp)
       }, session);
 
-       
+      // 5. Prepare GPS Points and calculate metrics
+      let totalDistance = 0;
+      let totalIdlingTime = 0;
+      let totalStoppageTime = 0;
+      
       const gpsPoints = rows.map(row => ({
         tripId: trip._id,
         latitude: row.latitude,
         longitude: row.longitude,
         timestamp: new Date(row.timestamp),
         ignition: row.ignition === 'ON',
-        speed: 0  
+        speed: 0
       }));
 
-       
+      // 6. Loop to calculate segments and aggregate analytics
       for (let i = 1; i < gpsPoints.length; i++) {
         const prev = gpsPoints[i - 1];
         const curr = gpsPoints[i];
 
-         
         const distance = getDistance(
           { latitude: prev.latitude, longitude: prev.longitude },
           { latitude: curr.latitude, longitude: curr.longitude }
         );
 
-         
         const timeDiff = (curr.timestamp.getTime() - prev.timestamp.getTime()) / 1000;
 
-         
         if (timeDiff > 0) {
           curr.speed = (distance / timeDiff) * 3.6;
-        } else {
-           
-          curr.speed = 0;
+          totalDistance += distance;
+
+          // Aggregation Logic (FIX: Missing analytics)
+          if (prev.ignition && curr.ignition && curr.speed < 1) { // Speed < 1km/h as threshold for idling
+            totalIdlingTime += timeDiff;
+          } else if (!prev.ignition && !curr.ignition) {
+            totalStoppageTime += timeDiff;
+          }
         }
       }
-       
 
-       
+      // 7. Bulk create points
       await this._gpsRepo.bulkCreate(gpsPoints, session);
 
-       
+      // 8. Update Trip with aggregated metrics (FIX: Dead analytics)
+      const updatedTrip = await this._tripRepo.update(trip._id.toString(), {
+        totalDistance,
+        totalIdlingTime,
+        totalStoppageTime
+      }, session);
+
       await session.commitTransaction();
 
       return {
-        trip,
+        trip: updatedTrip || trip,
         pointsCount: gpsPoints.length
       };
     } catch (error) {
-       
       await session.abortTransaction();
       throw error;
     } finally {

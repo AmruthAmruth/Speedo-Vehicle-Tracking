@@ -21,4 +21,8 @@ export class TripRepository implements ITripRepository {
   async findById(id: string) {
     return TripModel.findById(id).lean();
   }
+
+  async update(id: string, data: Partial<ITrip>, session?: ClientSession) {
+    return TripModel.findByIdAndUpdate(id, data, { new: true, session }).lean();
+  }
 }
