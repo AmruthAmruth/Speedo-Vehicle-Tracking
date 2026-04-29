@@ -31,4 +31,12 @@ export const tripApi = {
         const response = await api.get<GetGPSPointsResponse>(API_ROUTES.TRIP.GET_GPS_POINTS(id));
         return response.data;
     },
+
+    startSimulation: async (id: string): Promise<void> => {
+        await api.post(`/trip/${id}/simulate`);
+    },
+
+    stopSimulation: async (id: string): Promise<void> => {
+        await api.post(`/trip/${id}/simulate/stop`);
+    }
 };

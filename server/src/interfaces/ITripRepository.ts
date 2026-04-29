@@ -7,3 +7,4 @@ export interface ITripRepository {
     findById(id: string): Promise<ITrip | null>;
     update(id: string, data: Partial<ITrip>, session?: ClientSession): Promise<ITrip | null>;
 }
+  

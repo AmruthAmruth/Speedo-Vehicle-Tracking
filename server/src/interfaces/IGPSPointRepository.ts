@@ -5,3 +5,4 @@ export interface IGPSPointRepository {
     bulkCreate(points: Partial<IGPSPoint>[], session?: ClientSession): Promise<IGPSPoint[]>;
     findByTripId(tripId: string): Promise<IGPSPoint[]>;
 }
+  

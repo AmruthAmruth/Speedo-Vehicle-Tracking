@@ -33,4 +33,16 @@ tripRouter.get(
   tripController.getTripGPSPoints
 );
 
+tripRouter.post(
+  '/:id/simulate',
+  authMiddleware,
+  tripController.startSimulation
+);
+
+tripRouter.post(
+  '/:id/simulate/stop',
+  authMiddleware,
+  tripController.stopSimulation
+);
+
 export default tripRouter;

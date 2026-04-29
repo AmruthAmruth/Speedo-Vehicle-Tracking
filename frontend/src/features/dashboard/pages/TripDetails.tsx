@@ -11,6 +11,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { socketService } from '../../../services/socketService';
 
 const TripDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -21,10 +22,30 @@ const TripDetails: React.FC = () => {
     const [speedLimit, setSpeedLimit] = useState(80);
     const [showStoppages, setShowStoppages] = useState(true);
     const [showIdling, setShowIdling] = useState(true);
+    const [isSimulating, setIsSimulating] = useState(false);
 
     useEffect(() => {
         if (id) {
             loadTripData();
+
+            // Initialize Real-Time Socket Connection
+            const socket = socketService.connect();
+            socketService.joinTrip(id);
+
+            const handleLocationUpdate = (newPoint: GPSPoint) => {
+                console.log('📍 Real-time point received:', newPoint);
+                setGpsPoints(prev => {
+                    if (prev.some(p => p._id === newPoint._id)) return prev;
+                    return [...prev, newPoint];
+                });
+            };
+
+            socket.on('locationUpdate', handleLocationUpdate);
+            
+            return () => {
+                socket.off('locationUpdate', handleLocationUpdate);
+                socketService.disconnect();
+            };
         }
     }, [id]);
 
@@ -40,6 +61,31 @@ const TripDetails: React.FC = () => {
             console.error('Failed to load trip data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleStartSimulation = async () => {
+        try {
+            setIsSimulating(true);
+            // Clear existing points so we can watch them be added live
+            setGpsPoints([]);
+            await tripApi.startSimulation(id!);
+            console.log('🚀 Simulation started');
+        } catch (error) {
+            console.error('Failed to start simulation:', error);
+            setIsSimulating(false);
+        }
+    };
+
+    const handleStopSimulation = async () => {
+        try {
+            await tripApi.stopSimulation(id!);
+            setIsSimulating(false);
+            setLoading(true);
+            await loadTripData(); // Reload full trip to show the whole path
+            console.log('🛑 Simulation stopped');
+        } catch (error) {
+            console.error('Failed to stop simulation:', error);
         }
     };
 
@@ -74,14 +120,39 @@ const TripDetails: React.FC = () => {
         <div className="trip-details">
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
-                <button
-                    className="btn-secondary"
-                    style={{ marginBottom: '16px' }}
-                    onClick={() => navigate('/dashboard/trips')}
-                >
-                    <ArrowBackIcon style={{ fontSize: 18 }} />
-                    Back to Trips
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <button className="btn-secondary" onClick={() => navigate('/dashboard/trips')}>
+                        <ArrowBackIcon style={{ fontSize: 18 }} />
+                        Back to Trips
+                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        {!isSimulating ? (
+                            <button
+                                className="btn-primary"
+                                onClick={handleStartSimulation}
+                                style={{ 
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                🚀 Simulate Live Trip
+                            </button>
+                        ) : (
+                            <button
+                                className="btn-primary"
+                                onClick={handleStopSimulation}
+                                style={{ 
+                                    background: '#EF4444', 
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                🛑 Stop Simulation
+                            </button>
+                        )}
+                    </div>
+                </div>          
                 <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#2d3748', margin: '0 0 8px 0' }}>
                     {trip.name}
                 </h2>
@@ -224,21 +295,13 @@ const TripDetails: React.FC = () => {
                 </div>
 
                 {/* Map Component */}
-                {gpsPoints.length > 0 ? (
-                    <TripMap
-                        gpsPoints={gpsPoints}
-                        tripName={trip.name}
-                        speedLimit={speedLimit}
-                        showStoppages={showStoppages}
-                        showIdling={showIdling}
-                    />
-                ) : (
-                    <div className="empty-state">
-                        <div className="empty-icon">🗺️</div>
-                        <h4 className="empty-title">No GPS data available</h4>
-                        <p className="empty-description">This trip doesn't have any GPS points to display</p>
-                    </div>
-                )}
+                <TripMap
+                    gpsPoints={gpsPoints}
+                    tripName={trip.name}
+                    speedLimit={speedLimit}
+                    showStoppages={showStoppages}
+                    showIdling={showIdling}
+                />
             </div>
 
             {/* GPS Points Table */}

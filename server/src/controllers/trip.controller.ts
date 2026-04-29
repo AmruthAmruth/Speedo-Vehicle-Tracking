@@ -15,13 +15,43 @@ import {
 } from '../shared/types/errors';
 import { injectable, inject } from 'tsyringe';
 
+import { SimulationService } from '../services/simulation.service';
+
 @injectable()
 export class TripController {
   constructor(
     @inject('ITripUploadService') private _service: ITripUploadService,
     @inject('ITripRepository') private _tripRepo: ITripRepository,
-    @inject('IGPSPointRepository') private _gpsRepo: IGPSPointRepository
+    @inject('IGPSPointRepository') private _gpsRepo: IGPSPointRepository,
+    @inject('SimulationService') private _simulationService: SimulationService
   ) { }
+
+  startSimulation = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    const { id } = req.params;
+    
+    // Start simulation in background
+    this._simulationService.startSimulation(id as string);
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Simulation started successfully'
+    });
+  });
+
+  stopSimulation = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    const { id } = req.params;
+    
+    this._simulationService.stopSimulation(id as string);
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Simulation stopped successfully'
+    });
+  });
 
   uploadTrip = asyncHandler(async (
     req: AuthRequest,

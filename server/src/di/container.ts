@@ -5,6 +5,8 @@ import { GPSPointRepository } from '../repositories/gpspoint.repository';
 import { AuthService } from '../services/auth.service';
 import { TripUploadService } from '../services/tripUpload.service';
 import { CsvService } from '../services/csv.service';
+import { SimulationService } from '../services/simulation.service';
+import { SocketService } from '../services/socket.service';
 
  
 container.register('IUserRepository', { useClass: UserRepository });
@@ -15,5 +17,7 @@ container.register('IGPSPointRepository', { useClass: GPSPointRepository });
 container.register('IAuthService', { useClass: AuthService });
 container.register('ITripUploadService', { useClass: TripUploadService });
 container.register('ICsvService', { useClass: CsvService });
+container.registerSingleton('SimulationService', SimulationService);
+container.registerSingleton('SocketService', SocketService);
 
 export { container };
