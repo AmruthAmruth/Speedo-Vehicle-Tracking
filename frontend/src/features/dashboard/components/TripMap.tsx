@@ -27,6 +27,7 @@ interface TripMapProps {
     showStoppages?: boolean;
     showIdling?: boolean;
     color?: string;
+    activePointIndex?: number;
 }
 
 const TripMap: React.FC<TripMapProps> = ({
@@ -36,9 +37,11 @@ const TripMap: React.FC<TripMapProps> = ({
     showStoppages = true,
     showIdling = true,
     color = '#3B82F6',
+    activePointIndex,
 }) => {
     const mapRef = useRef<L.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
+    const vehicleMarkerRef = useRef<L.Marker | null>(null);
 
     useEffect(() => {
         if (!mapContainerRef.current) return;
@@ -57,9 +60,10 @@ const TripMap: React.FC<TripMapProps> = ({
             }).addTo(mapRef.current);
         }
 
-        // Clear existing layers (except tile layer)
+        // Clear existing layers (except tile layer and vehicle marker)
         mapRef.current.eachLayer((layer) => {
             if (layer instanceof L.TileLayer) return;
+            if (layer === vehicleMarkerRef.current) return;
             mapRef.current?.removeLayer(layer);
         });
 
@@ -68,56 +72,66 @@ const TripMap: React.FC<TripMapProps> = ({
         if (validPoints.length === 0) return;
 
         const sortedPoints = sortGPSPointsByTimestamp(validPoints);
-
+        const currentIndex = activePointIndex !== undefined ? activePointIndex : sortedPoints.length - 1;
+        
         // --- DRAWING LOGIC ---
 
         if (sortedPoints.length > 1) {
-            const overspeedSections = detectOverspeedSections(sortedPoints, speedLimit);
-            const overspeedIndices = new Set<number>();
+            // Draw FULL historical path in a faint color (Ghost Path)
+            const fullCoords: [number, number][] = sortedPoints.map(p => [p.latitude, p.longitude]);
+            L.polyline(fullCoords, { color: '#CBD5E1', weight: 3, opacity: 0.4, dashArray: '5, 10' }).addTo(mapRef.current!);
 
-            overspeedSections.forEach(section => {
-                for (let i = section.startIndex; i <= section.endIndex; i++) {
-                    overspeedIndices.add(i);
-                }
-            });
+            // Points up to current playback index
+            const traveledPoints = sortedPoints.slice(0, currentIndex + 1);
 
-            // Draw main path segments
-            let currentSegment: [number, number][] = [];
-            for (let i = 0; i < sortedPoints.length; i++) {
-                const point = sortedPoints[i];
-                if (!overspeedIndices.has(i)) {
-                    currentSegment.push([point.latitude, point.longitude]);
-                } else {
-                    if (currentSegment.length > 1) {
-                        L.polyline(currentSegment, { color, weight: 4, opacity: 0.8 }).addTo(mapRef.current!);
+            if (traveledPoints.length > 1) {
+                const overspeedSections = detectOverspeedSections(traveledPoints, speedLimit);
+                const overspeedIndices = new Set<number>();
+
+                overspeedSections.forEach(section => {
+                    for (let i = section.startIndex; i <= section.endIndex; i++) {
+                        overspeedIndices.add(i);
                     }
-                    currentSegment = [];
-                }
-            }
-            if (currentSegment.length > 1) {
-                L.polyline(currentSegment, { color, weight: 4, opacity: 0.8 }).addTo(mapRef.current!);
-            }
+                });
 
-            // Draw overspeed sections in red
-            overspeedSections.forEach(section => {
-                const coords: [number, number][] = section.points.map(p => [p.latitude, p.longitude]);
-                L.polyline(coords, { color: '#EF4444', weight: 5, opacity: 0.9 })
-                    .addTo(mapRef.current!)
-                    .bindPopup(`
-                        <div class="map-popup overspeed">
-                          <h4>⚠️ Overspeed Section</h4>
-                          <p><strong>Max Speed:</strong> ${formatSpeed(section.maxSpeed)}</p>
-                          <p><strong>Points:</strong> ${section.points.length}</p>
-                        </div>
-                    `);
-            });
+                // Draw main path segments for traveled part
+                let currentSegment: [number, number][] = [];
+                for (let i = 0; i < traveledPoints.length; i++) {
+                    const point = traveledPoints[i];
+                    if (!overspeedIndices.has(i)) {
+                        currentSegment.push([point.latitude, point.longitude]);
+                    } else {
+                        if (currentSegment.length > 1) {
+                            L.polyline(currentSegment, { color, weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
+                        }
+                        currentSegment = [[point.latitude, point.longitude]]; // Start new segment from overspeed end
+                    }
+                }
+                if (currentSegment.length > 1) {
+                    L.polyline(currentSegment, { color, weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
+                }
+
+                // Draw overspeed sections in red
+                overspeedSections.forEach(section => {
+                    const coords: [number, number][] = section.points.map(p => [p.latitude, p.longitude]);
+                    L.polyline(coords, { color: '#EF4444', weight: 6, opacity: 1.0 })
+                        .addTo(mapRef.current!)
+                        .bindPopup(`
+                            <div class="map-popup overspeed">
+                              <h4>⚠️ Overspeed Section</h4>
+                              <p><strong>Max Speed:</strong> ${formatSpeed(section.maxSpeed)}</p>
+                              <p><strong>Points:</strong> ${section.points.length}</p>
+                            </div>
+                        `);
+                });
+            }
 
             // Add start/end markers
             const startIcon = L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin start">S</div>', iconSize: [30, 42], iconAnchor: [15, 42] });
             const endIcon = L.divIcon({ className: 'custom-marker', html: '<div class="marker-pin end">E</div>', iconSize: [30, 42], iconAnchor: [15, 42] });
 
             L.marker([sortedPoints[0].latitude, sortedPoints[0].longitude], { icon: startIcon }).addTo(mapRef.current!).bindPopup('Trip Start');
-            L.marker([sortedPoints[sortedPoints.length - 1].latitude, sortedPoints[sortedPoints.length - 1].longitude], { icon: endIcon }).addTo(mapRef.current!).bindPopup('Latest Position');
+            L.marker([sortedPoints[sortedPoints.length - 1].latitude, sortedPoints[sortedPoints.length - 1].longitude], { icon: endIcon }).addTo(mapRef.current!).bindPopup('Trip End');
 
             // Add stoppages
             if (showStoppages) {
@@ -137,9 +151,11 @@ const TripMap: React.FC<TripMapProps> = ({
                 });
             }
 
-            // Auto-fit map
-            const bounds = L.latLngBounds(sortedPoints.map(p => [p.latitude, p.longitude]));
-            mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+            // Auto-fit map ONLY on initial load or if not replaying
+            if (activePointIndex === undefined || activePointIndex === sortedPoints.length - 1) {
+                const bounds = L.latLngBounds(sortedPoints.map(p => [p.latitude, p.longitude]));
+                mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+            }
         } else {
             // Single point case
             const point = sortedPoints[0];
@@ -147,24 +163,39 @@ const TripMap: React.FC<TripMapProps> = ({
         }
 
         // --- LIVE VEHICLE MARKER ---
-        const lastPoint = sortedPoints[sortedPoints.length - 1];
+        const activePoint = sortedPoints[currentIndex];
         const vehicleIcon = L.divIcon({
             className: 'live-vehicle-icon',
             html: `
-                <div style="background: #3B82F6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8); position: relative;">
-                    <div style="position: absolute; top: -10px; left: -10px; width: 36px; height: 36px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
+                <div style="background: #4F46E5; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(79, 70, 229, 0.6); position: relative; display: flex; align-items: center; justify-content: center;">
+                    <div style="position: absolute; top: -8px; left: -8px; width: 36px; height: 36px; background: rgba(79, 70, 229, 0.2); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
+                    <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid white; transform: rotate(${activePoint.heading || 0}deg);"></div>
                 </div>
-                <style>@keyframes pulse-anim { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }</style>
+                <style>@keyframes pulse-anim { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }</style>
             `,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
         });
 
-        L.marker([lastPoint.latitude, lastPoint.longitude], { icon: vehicleIcon, zIndexOffset: 1000 })
-            .addTo(mapRef.current!)
-            .bindTooltip("Current Position", { permanent: false, direction: 'top' });
+        if (vehicleMarkerRef.current) {
+            vehicleMarkerRef.current.setLatLng([activePoint.latitude, activePoint.longitude]);
+            vehicleMarkerRef.current.setIcon(vehicleIcon);
+        } else {
+            vehicleMarkerRef.current = L.marker([activePoint.latitude, activePoint.longitude], { 
+                icon: vehicleIcon, 
+                zIndexOffset: 1000 
+            }).addTo(mapRef.current!);
+        }
 
-    }, [gpsPoints, tripName, speedLimit, showStoppages, showIdling, color]);
+        vehicleMarkerRef.current.bindTooltip(`
+            <div style="padding: 4px 8px; font-weight: 600;">
+                ${formatSpeed(activePoint.speed)}<br>
+                <span style="font-size: 10px; color: #64748b;">${new Date(activePoint.timestamp).toLocaleTimeString()}</span>
+            </div>
+        `, { permanent: false, direction: 'top' });
+
+    }, [gpsPoints, tripName, speedLimit, showStoppages, showIdling, color, activePointIndex]);
+
 
     useEffect(() => {
         return () => {

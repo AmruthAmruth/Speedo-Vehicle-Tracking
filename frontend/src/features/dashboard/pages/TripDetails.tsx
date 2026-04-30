@@ -27,6 +27,11 @@ const TripDetails: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // Playback/Replay States
+    const [replayIndex, setReplayIndex] = useState<number | null>(null);
+    const [isReplaying, setIsReplaying] = useState(false);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
     useEffect(() => {
         if (id) {
             loadTripData();
@@ -39,7 +44,15 @@ const TripDetails: React.FC = () => {
                 console.log('📍 Real-time point received:', newPoint);
                 setGpsPoints(prev => {
                     if (prev.some(p => p._id === newPoint._id)) return prev;
-                    return [...prev, newPoint];
+                    const next = [...prev, newPoint];
+                    // If the user hasn't manually scrubbed (or was at the end), keep them at the end
+                    setReplayIndex(currentIndex => {
+                        if (currentIndex === null || currentIndex === prev.length - 1) {
+                            return next.length - 1;
+                        }
+                        return currentIndex;
+                    });
+                    return next;
                 });
             };
 
@@ -60,12 +73,35 @@ const TripDetails: React.FC = () => {
             ]);
             setTrip(tripData);
             setGpsPoints(gpsData.gpsPoints);
+            // Initialize replay index to the end if not replaying
+            if (gpsData.gpsPoints.length > 0) {
+                setReplayIndex(gpsData.gpsPoints.length - 1);
+            }
         } catch (error) {
             console.error('Failed to load trip data:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    // Playback Timer logic
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isReplaying && replayIndex !== null && replayIndex < gpsPoints.length - 1) {
+            interval = setInterval(() => {
+                setReplayIndex(prev => {
+                    if (prev !== null && prev < gpsPoints.length - 1) {
+                        return prev + 1;
+                    }
+                    setIsReplaying(false);
+                    return prev;
+                });
+            }, 1000 / playbackSpeed);
+        } else if (replayIndex === gpsPoints.length - 1) {
+            setIsReplaying(false);
+        }
+        return () => clearInterval(interval);
+    }, [isReplaying, replayIndex, playbackSpeed, gpsPoints.length]);
 
     const handleStartSimulation = async () => {
         try {
@@ -350,13 +386,124 @@ const TripDetails: React.FC = () => {
                 </div>
 
                 {/* Map Component */}
-                <TripMap
-                    gpsPoints={gpsPoints}
-                    tripName={trip.name}
-                    speedLimit={speedLimit}
-                    showStoppages={showStoppages}
-                    showIdling={showIdling}
-                />
+                <div style={{ position: 'relative' }}>
+                    <TripMap
+                        gpsPoints={gpsPoints}
+                        tripName={trip.name}
+                        speedLimit={speedLimit}
+                        showStoppages={showStoppages}
+                        showIdling={showIdling}
+                        activePointIndex={replayIndex !== null ? replayIndex : undefined}
+                    />
+
+                    {/* Playback Controls Overlay */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '90%',
+                        maxWidth: '800px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        backdropFilter: 'blur(8px)',
+                        padding: '16px 24px',
+                        borderRadius: '16px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.5)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <button
+                                onClick={() => setIsReplaying(!isReplaying)}
+                                style={{
+                                    background: isReplaying ? '#FEE2E2' : '#E0E7FF',
+                                    color: isReplaying ? '#EF4444' : '#4F46E5',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                }}
+                            >
+                                {isReplaying ? 
+                                    <PauseCircleIcon style={{ fontSize: 24 }} /> : 
+                                    <RouteIcon style={{ fontSize: 24, transform: 'rotate(90deg)' }} /> 
+                                }
+                            </button>
+
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#4F46E5', background: '#EEF2FF', padding: '2px 8px', borderRadius: '4px' }}>
+                                            {replayIndex !== null && gpsPoints[replayIndex] ? 
+                                                new Date(gpsPoints[replayIndex].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 
+                                                '--:--:--'
+                                            }
+                                        </span>
+                                        {replayIndex !== null && gpsPoints[replayIndex] && (
+                                            <span style={{ fontSize: '11px', fontWeight: 600, color: gpsPoints[replayIndex].speed > speedLimit ? '#EF4444' : '#10B981' }}>
+                                                {formatSpeed(gpsPoints[replayIndex].speed)}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
+                                        Point {replayIndex !== null ? replayIndex + 1 : 0} of {gpsPoints.length}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={gpsPoints.length > 0 ? gpsPoints.length - 1 : 0}
+                                    value={replayIndex || 0}
+                                    onChange={(e) => {
+                                        setReplayIndex(parseInt(e.target.value));
+                                        if (isReplaying) setIsReplaying(false);
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        cursor: 'pointer',
+                                        accentColor: '#4F46E5',
+                                        height: '6px',
+                                        borderRadius: '3px'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Speed</span>
+                                <div style={{ display: 'flex', background: '#F1F5F9', padding: '4px', borderRadius: '8px', gap: '2px' }}>
+                                    {[1, 2, 5].map(speed => (
+                                        <button
+                                            key={speed}
+                                            onClick={() => setPlaybackSpeed(speed)}
+                                            style={{
+                                                padding: '4px 10px',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                background: playbackSpeed === speed ? '#4F46E5' : 'transparent',
+                                                color: playbackSpeed === speed ? 'white' : '#64748B',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            {speed}x
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* GPS Points Table */}
