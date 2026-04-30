@@ -13,6 +13,8 @@ const TripList: React.FC = () => {
     const [filteredTrips, setFilteredTrips] = useState<Trip[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const tripsPerPage = 6;
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -114,11 +116,24 @@ const TripList: React.FC = () => {
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-                    {filteredTrips.map((trip) => (
+                    {filteredTrips
+                        .slice((currentPage - 1) * tripsPerPage, currentPage * tripsPerPage)
+                        .map((trip) => (
                         <div
                             key={trip._id}
                             className="dashboard-card"
-                            style={{ cursor: 'pointer' }}
+                            style={{ 
+                                cursor: 'pointer',
+                                transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 8px -5px rgba(0, 0, 0, 0.04)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}
                             onClick={() => navigate(`/dashboard/trips/${trip._id}`)}
                         >
                             {/* Trip Header */}
@@ -176,7 +191,14 @@ const TripList: React.FC = () => {
                             {/* View Button */}
                             <button
                                 className="btn-primary"
-                                style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
+                                style={{ 
+                                    width: '100%', 
+                                    marginTop: '16px', 
+                                    justifyContent: 'center',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    border: 'none',
+                                    fontWeight: 600
+                                }}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/dashboard/trips/${trip._id}`);
@@ -189,10 +211,107 @@ const TripList: React.FC = () => {
                 </div>
             )}
 
-            {/* Results Count */}
+            {/* Results Count and Pagination */}
             {filteredTrips.length > 0 && (
-                <div style={{ marginTop: '24px', textAlign: 'center', color: '#718096', fontSize: '14px' }}>
-                    Showing {filteredTrips.length} of {trips.length} trips
+                <div style={{ 
+                    marginTop: '32px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    gap: '20px' 
+                }}>
+                    <div style={{ color: '#718096', fontSize: '14px', fontWeight: 500 }}>
+                        Showing <span style={{ color: '#2d3748', fontWeight: 700 }}>
+                            {(currentPage - 1) * tripsPerPage + 1}-{Math.min(filteredTrips.length, currentPage * tripsPerPage)}
+                        </span> of <span style={{ color: '#2d3748', fontWeight: 700 }}>{filteredTrips.length}</span> trips
+                    </div>
+
+                    {filteredTrips.length > tripsPerPage && (
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                style={{
+                                    padding: '10px 20px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    background: currentPage === 1 ? '#f8fafc' : '#ffffff',
+                                    color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: currentPage === 1 ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'
+                                }}
+                            >
+                                Previous
+                            </button>
+
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                {Array.from({ length: Math.ceil(filteredTrips.length / tripsPerPage) }, (_, i) => {
+                                    const pageNum = i + 1;
+                                    const totalPages = Math.ceil(filteredTrips.length / tripsPerPage);
+                                    
+                                    if (
+                                        pageNum === 1 || 
+                                        pageNum === totalPages || 
+                                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                style={{
+                                                    width: '42px',
+                                                    height: '42px',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid',
+                                                    borderColor: currentPage === pageNum ? '#6366f1' : '#e2e8f0',
+                                                    background: currentPage === pageNum ? '#6366f1' : '#ffffff',
+                                                    color: currentPage === pageNum ? '#ffffff' : '#475569',
+                                                    fontSize: '14px',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: currentPage === pageNum ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+                                                }}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    }
+                                    
+                                    if (
+                                        (pageNum === 2 && currentPage > 3) || 
+                                        (pageNum === totalPages - 1 && currentPage < totalPages - 2)
+                                    ) {
+                                        return <span key={pageNum} style={{ color: '#94a3b8', alignSelf: 'center' }}>...</span>;
+                                    }
+
+                                    return null;
+                                })}
+                            </div>
+
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredTrips.length / tripsPerPage), prev + 1))}
+                                disabled={currentPage >= Math.ceil(filteredTrips.length / tripsPerPage)}
+                                style={{
+                                    padding: '10px 20px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    background: currentPage >= Math.ceil(filteredTrips.length / tripsPerPage) ? '#f8fafc' : '#ffffff',
+                                    color: currentPage >= Math.ceil(filteredTrips.length / tripsPerPage) ? '#cbd5e1' : '#475569',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    cursor: currentPage >= Math.ceil(filteredTrips.length / tripsPerPage) ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: currentPage >= Math.ceil(filteredTrips.length / tripsPerPage) ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'
+                                }}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

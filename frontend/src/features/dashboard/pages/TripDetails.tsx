@@ -23,6 +23,8 @@ const TripDetails: React.FC = () => {
     const [showStoppages, setShowStoppages] = useState(true);
     const [showIdling, setShowIdling] = useState(true);
     const [isSimulating, setIsSimulating] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     useEffect(() => {
         if (id) {
@@ -310,7 +312,7 @@ const TripDetails: React.FC = () => {
                     <h3 className="card-title">GPS Points</h3>
                     <p className="card-subtitle">{gpsPoints.length} points recorded</p>
                 </div>
-                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
+                <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
                             <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
@@ -323,9 +325,21 @@ const TripDetails: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {gpsPoints.slice(0, 100).map((point, index) => (
-                                <tr key={point._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '12px', color: '#718096' }}>{index + 1}</td>
+                            {gpsPoints
+                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                .map((point, index) => (
+                                    <tr 
+                                        key={point._id} 
+                                        style={{ 
+                                            borderBottom: '1px solid #f1f5f9',
+                                            transition: 'background-color 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                    >
+                                        <td style={{ padding: '12px', color: '#94a3b8', fontSize: '13px' }}>
+                                            {(currentPage - 1) * itemsPerPage + index + 1}
+                                        </td>
                                     <td style={{ padding: '12px', color: '#2d3748', fontSize: '13px' }}>
                                         {new Date(point.timestamp).toLocaleString()}
                                     </td>
@@ -356,11 +370,185 @@ const TripDetails: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
-                    {gpsPoints.length > 100 && (
-                        <p style={{ textAlign: 'center', padding: '16px', color: '#718096', fontSize: '14px' }}>
-                            Showing first 100 of {gpsPoints.length} points
-                        </p>
-                    )}
+                </div>
+
+                {/* Pagination Control */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '20px 24px',
+                    borderTop: '1px solid #f1f5f9',
+                    background: '#ffffff',
+                    flexWrap: 'wrap',
+                    gap: '16px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ fontSize: '14px', color: '#64748b' }}>
+                            Showing <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                                {gpsPoints.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
+                                {Math.min(gpsPoints.length, currentPage * itemsPerPage)}
+                            </span> of <span style={{ fontWeight: 600, color: '#1e293b' }}>{gpsPoints.length}</span> points
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', color: '#64748b' }}>Rows per page:</span>
+                            <select 
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                                style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '13px',
+                                    color: '#475569',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button 
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0',
+                                background: currentPage === 1 ? '#f8fafc' : '#ffffff',
+                                color: currentPage === 1 ? '#cbd5e1' : '#475569',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                boxShadow: currentPage === 1 ? 'none' : '0 1px 2px rgba(0,0,0,0.05)'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (currentPage !== 1) {
+                                    e.currentTarget.style.borderColor = '#6366f1';
+                                    e.currentTarget.style.color = '#6366f1';
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (currentPage !== 1) {
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
+                                    e.currentTarget.style.color = '#475569';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }
+                            }}
+                        >
+                            Previous
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            {/* Simple dynamic pagination numbers */}
+                            {Array.from({ length: Math.ceil(gpsPoints.length / itemsPerPage) }, (_, i) => {
+                                const pageNum = i + 1;
+                                const totalPages = Math.ceil(gpsPoints.length / itemsPerPage);
+                                
+                                // Show first, last, and pages around current
+                                if (
+                                    pageNum === 1 || 
+                                    pageNum === totalPages || 
+                                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            style={{
+                                                width: '38px',
+                                                height: '38px',
+                                                borderRadius: '8px',
+                                                border: '1px solid',
+                                                borderColor: currentPage === pageNum ? '#6366f1' : '#e2e8f0',
+                                                background: currentPage === pageNum ? '#6366f1' : '#ffffff',
+                                                color: currentPage === pageNum ? '#ffffff' : '#475569',
+                                                fontSize: '14px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                boxShadow: currentPage === pageNum ? '0 4px 6px -1px rgba(99, 102, 241, 0.4)' : 'none'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (currentPage !== pageNum) {
+                                                    e.currentTarget.style.borderColor = '#6366f1';
+                                                    e.currentTarget.style.color = '#6366f1';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (currentPage !== pageNum) {
+                                                    e.currentTarget.style.borderColor = '#e2e8f0';
+                                                    e.currentTarget.style.color = '#475569';
+                                                }
+                                            }}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                }
+                                
+                                if (
+                                    (pageNum === 2 && currentPage > 3) || 
+                                    (pageNum === totalPages - 1 && currentPage < totalPages - 2)
+                                ) {
+                                    return <span key={pageNum} style={{ color: '#94a3b8', padding: '0 4px', alignSelf: 'center' }}>...</span>;
+                                }
+
+                                return null;
+                            })}
+                        </div>
+
+                        <button 
+                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(gpsPoints.length / itemsPerPage), prev + 1))}
+                            disabled={currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0',
+                                background: (currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0) ? '#f8fafc' : '#ffffff',
+                                color: (currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0) ? '#cbd5e1' : '#475569',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                cursor: (currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0) ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                boxShadow: (currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0) ? 'none' : '0 1px 2px rgba(0,0,0,0.05)'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (currentPage < Math.ceil(gpsPoints.length / itemsPerPage)) {
+                                    e.currentTarget.style.borderColor = '#6366f1';
+                                    e.currentTarget.style.color = '#6366f1';
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (currentPage < Math.ceil(gpsPoints.length / itemsPerPage)) {
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
+                                    e.currentTarget.style.color = '#475569';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }
+                            }}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
