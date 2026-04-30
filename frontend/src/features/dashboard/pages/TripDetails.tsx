@@ -108,6 +108,7 @@ const TripDetails: React.FC = () => {
             setIsSimulating(true);
             // Clear existing points so we can watch them be added live
             setGpsPoints([]);
+            setReplayIndex(null);
             await tripApi.startSimulation(id!);
             console.log('🚀 Simulation started');
         } catch (error) {

@@ -27,7 +27,7 @@ interface TripMapProps {
     showStoppages?: boolean;
     showIdling?: boolean;
     color?: string;
-    activePointIndex?: number;
+    activePointIndex?: number | null;
 }
 
 const TripMap: React.FC<TripMapProps> = ({
@@ -72,8 +72,18 @@ const TripMap: React.FC<TripMapProps> = ({
         if (validPoints.length === 0) return;
 
         const sortedPoints = sortGPSPointsByTimestamp(validPoints);
-        const currentIndex = activePointIndex !== undefined ? activePointIndex : sortedPoints.length - 1;
         
+        // Determine current index for playback
+        let currentIndex = (activePointIndex !== undefined && activePointIndex !== null) 
+            ? activePointIndex 
+            : sortedPoints.length - 1;
+        
+        // Safety check for bounds
+        if (currentIndex < 0) currentIndex = 0;
+        if (currentIndex >= sortedPoints.length) currentIndex = sortedPoints.length - 1;
+
+        const activePoint = sortedPoints[currentIndex];
+
         // --- DRAWING LOGIC ---
 
         if (sortedPoints.length > 1) {
@@ -104,7 +114,7 @@ const TripMap: React.FC<TripMapProps> = ({
                         if (currentSegment.length > 1) {
                             L.polyline(currentSegment, { color, weight: 5, opacity: 0.9 }).addTo(mapRef.current!);
                         }
-                        currentSegment = [[point.latitude, point.longitude]]; // Start new segment from overspeed end
+                        currentSegment = [[point.latitude, point.longitude]]; 
                     }
                 }
                 if (currentSegment.length > 1) {
@@ -152,50 +162,50 @@ const TripMap: React.FC<TripMapProps> = ({
             }
 
             // Auto-fit map ONLY on initial load or if not replaying
-            if (activePointIndex === undefined || activePointIndex === sortedPoints.length - 1) {
+            if (activePointIndex === undefined || activePointIndex === null || activePointIndex === sortedPoints.length - 1) {
                 const bounds = L.latLngBounds(sortedPoints.map(p => [p.latitude, p.longitude]));
                 mapRef.current.fitBounds(bounds, { padding: [50, 50] });
             }
-        } else {
+        } else if (sortedPoints.length === 1) {
             // Single point case
             const point = sortedPoints[0];
             mapRef.current.setView([point.latitude, point.longitude], 15);
         }
 
         // --- LIVE VEHICLE MARKER ---
-        const activePoint = sortedPoints[currentIndex];
-        const vehicleIcon = L.divIcon({
-            className: 'live-vehicle-icon',
-            html: `
-                <div style="background: #4F46E5; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(79, 70, 229, 0.6); position: relative; display: flex; align-items: center; justify-content: center;">
-                    <div style="position: absolute; top: -8px; left: -8px; width: 36px; height: 36px; background: rgba(79, 70, 229, 0.2); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
-                    <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid white; transform: rotate(${activePoint.heading || 0}deg);"></div>
-                </div>
-                <style>@keyframes pulse-anim { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }</style>
-            `,
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
-        });
+        if (activePoint) {
+            const vehicleIcon = L.divIcon({
+                className: 'live-vehicle-icon',
+                html: `
+                    <div style="background: #4F46E5; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(79, 70, 229, 0.6); position: relative; display: flex; align-items: center; justify-content: center;">
+                        <div style="position: absolute; top: -8px; left: -8px; width: 36px; height: 36px; background: rgba(79, 70, 229, 0.2); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
+                        <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid white; transform: rotate(${activePoint.heading || 0}deg);"></div>
+                    </div>
+                    <style>@keyframes pulse-anim { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }</style>
+                `,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
 
-        if (vehicleMarkerRef.current) {
-            vehicleMarkerRef.current.setLatLng([activePoint.latitude, activePoint.longitude]);
-            vehicleMarkerRef.current.setIcon(vehicleIcon);
-        } else {
-            vehicleMarkerRef.current = L.marker([activePoint.latitude, activePoint.longitude], { 
-                icon: vehicleIcon, 
-                zIndexOffset: 1000 
-            }).addTo(mapRef.current!);
+            if (vehicleMarkerRef.current) {
+                vehicleMarkerRef.current.setLatLng([activePoint.latitude, activePoint.longitude]);
+                vehicleMarkerRef.current.setIcon(vehicleIcon);
+            } else {
+                vehicleMarkerRef.current = L.marker([activePoint.latitude, activePoint.longitude], { 
+                    icon: vehicleIcon, 
+                    zIndexOffset: 1000 
+                }).addTo(mapRef.current!);
+            }
+
+            vehicleMarkerRef.current.bindTooltip(`
+                <div style="padding: 4px 8px; font-weight: 600;">
+                    ${formatSpeed(activePoint.speed)}<br>
+                    <span style="font-size: 10px; color: #64748b;">${new Date(activePoint.timestamp).toLocaleTimeString()}</span>
+                </div>
+            `, { permanent: false, direction: 'top' });
         }
 
-        vehicleMarkerRef.current.bindTooltip(`
-            <div style="padding: 4px 8px; font-weight: 600;">
-                ${formatSpeed(activePoint.speed)}<br>
-                <span style="font-size: 10px; color: #64748b;">${new Date(activePoint.timestamp).toLocaleTimeString()}</span>
-            </div>
-        `, { permanent: false, direction: 'top' });
-
     }, [gpsPoints, tripName, speedLimit, showStoppages, showIdling, color, activePointIndex]);
-
 
     useEffect(() => {
         return () => {
