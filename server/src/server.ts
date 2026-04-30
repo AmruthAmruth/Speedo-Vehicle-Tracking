@@ -10,6 +10,7 @@ import app from './app';
 import { connectDB } from './shared/config/db';
 import { createServer } from 'http';
 import { SocketService } from './services/socket.service';
+import { GPSWorker } from './workers/gps.worker';
 
 dotenv.config();
 
@@ -19,6 +20,9 @@ const httpServer = createServer(app);
 // Initialize Socket.IO via SocketService
 const socketService = container.resolve<SocketService>('SocketService');
 socketService.initialize(httpServer);
+
+// Initialize GPS Worker (BullMQ Consumer)
+container.resolve<GPSWorker>(GPSWorker);
 
 const startServer = async () => {
   await connectDB();

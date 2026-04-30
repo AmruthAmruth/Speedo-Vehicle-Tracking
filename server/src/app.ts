@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import router from './routes/auth.routes';
 import tripRouter from './routes/trip.routes';
+import gpsRouter from './routes/gps.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 
 import { globalLimiter } from './middleware/rateLimit.middleware';
@@ -17,6 +18,7 @@ app.use(globalLimiter);
 
 app.use('/api', router);
 app.use('/trip', tripRouter);
+app.use('/api/gps', gpsRouter);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

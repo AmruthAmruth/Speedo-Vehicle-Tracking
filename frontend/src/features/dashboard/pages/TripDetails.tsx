@@ -13,6 +13,10 @@ import StopCircleIcon from '@mui/icons-material/StopCircle';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { socketService } from '../../../services/socketService';
 import { getDistance } from 'geolib';
+import { detectOverspeedSections, detectIdlingPoints } from '../../../utils/mapUtils';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import SecurityIcon from '@mui/icons-material/Security';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 const TripDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -153,7 +157,12 @@ const TripDetails: React.FC = () => {
     }
 
     const calculateLiveStats = () => {
-        if (gpsPoints.length === 0) return { 
+        // Use visible points based on replay/simulation state
+        const activePoints = (isSimulating || isReplaying) && replayIndex !== null 
+            ? gpsPoints.slice(0, replayIndex + 1)
+            : gpsPoints;
+
+        if (activePoints.length === 0) return { 
             distance: 0, 
             avgSpeed: 0, 
             maxSpeed: 0, 
@@ -167,9 +176,9 @@ const TripDetails: React.FC = () => {
         let stoppage = 0;
         let maxSpeed = 0;
 
-        for (let i = 1; i < gpsPoints.length; i++) {
-            const prev = gpsPoints[i - 1];
-            const curr = gpsPoints[i];
+        for (let i = 1; i < activePoints.length; i++) {
+            const prev = activePoints[i - 1];
+            const curr = activePoints[i];
 
             const d = getDistance(
                 { latitude: prev.latitude, longitude: prev.longitude },
@@ -189,10 +198,10 @@ const TripDetails: React.FC = () => {
             }
         }
 
-        const duration = calculateTripDuration(
-            gpsPoints[0].timestamp, 
-            gpsPoints[gpsPoints.length - 1].timestamp
-        );
+        const duration = activePoints.length > 1 ? calculateTripDuration(
+            activePoints[0].timestamp, 
+            activePoints[activePoints.length - 1].timestamp
+        ) : 0;
         
         const avgSpeed = duration > 0 ? (distance / 1000) / (duration / 3600) : 0;
 
@@ -206,7 +215,71 @@ const TripDetails: React.FC = () => {
         };
     };
 
+    const calculateDriverScore = () => {
+        // Use visible points based on replay/simulation state
+        const activePoints = (isSimulating || isReplaying) && replayIndex !== null 
+            ? gpsPoints.slice(0, replayIndex + 1)
+            : gpsPoints;
+
+        // Require at least 2 points for a meaningful score
+        if (activePoints.length < 2) return { 
+            score: 100, 
+            breakdown: { overspeed: 0, idling: 0, harshBraking: 0, harshBrakingCount: 0 }, 
+            isPlaceholder: true 
+        };
+
+        let overspeedPenalty = 0;
+        let idlingPenalty = 0;
+        let harshBrakingPenalty = 0;
+        let harshBrakingCount = 0;
+
+        // 1. Overspeed Penalty
+        const overspeedSections = detectOverspeedSections(activePoints, speedLimit);
+        overspeedPenalty = overspeedSections.length * 5;
+
+        // 2. Idling Penalty
+        const idlingPoints = detectIdlingPoints(activePoints);
+        const totalIdlingSeconds = idlingPoints.reduce((acc, curr) => acc + curr.duration, 0);
+        idlingPenalty = Math.floor(totalIdlingSeconds / 300) * 2;
+
+        // 3. Harsh Braking Detection (Simulated)
+        for (let i = 1; i < activePoints.length; i++) {
+            const prev = activePoints[i - 1];
+            const curr = activePoints[i];
+            
+            const timeDiff = (new Date(curr.timestamp).getTime() - new Date(prev.timestamp).getTime()) / 1000;
+            // Safety: Only check points with a reasonable time gap (at least 0.5s)
+            if (timeDiff >= 0.5 && timeDiff < 10) {
+                const speedDiff = prev.speed - curr.speed;
+                // Only count deceleration (slowing down)
+                if (speedDiff > 0) {
+                    const deceleration = (speedDiff * 0.277778) / timeDiff; // m/s^2
+                    
+                    if (deceleration > 3.0 && deceleration < 20.0) { // Safety: ignore impossible deceleration (>20m/s^2)
+                        harshBrakingCount++;
+                    }
+                }
+            }
+        }
+        harshBrakingPenalty = harshBrakingCount * 4;
+
+        const totalPenalty = overspeedPenalty + idlingPenalty + harshBrakingPenalty;
+        const score = Math.max(0, 100 - totalPenalty);
+
+        return {
+            score,
+            breakdown: {
+                overspeed: overspeedPenalty,
+                idling: idlingPenalty,
+                harshBraking: harshBrakingPenalty,
+                harshBrakingCount
+            },
+            isPlaceholder: false
+        };
+    };
+
     const stats = calculateLiveStats();
+    const driverInsight = calculateDriverScore();
 
     return (
         <div className="trip-details">
@@ -254,7 +327,7 @@ const TripDetails: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="stats-grid" style={{ marginBottom: '24px' }}>
+            <div className="stats-grid" style={{ marginBottom: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
                 <div className="stat-card">
                     <div className="stat-icon">
                         <RouteIcon style={{ fontSize: 28 }} />
@@ -315,6 +388,104 @@ const TripDetails: React.FC = () => {
                     <div className="stat-content">
                         <p className="stat-label">GPS Points</p>
                         <h3 className="stat-value">{gpsPoints.length}</h3>
+                    </div>
+                </div>
+            </div>
+
+            {/* Driver Intelligence Section */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', marginBottom: '24px' }}>
+                {/* Score Card */}
+                <div className="dashboard-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}>
+                    <div style={{ position: 'relative', width: '160px', height: '160px', marginBottom: '20px' }}>
+                        <svg width="160" height="160" viewBox="0 0 160 160">
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="#EDF2F7" strokeWidth="12" />
+                            <circle 
+                                cx="80" 
+                                cy="80" 
+                                r="70" 
+                                fill="none" 
+                                stroke={driverInsight.score > 80 ? '#10B981' : driverInsight.score > 50 ? '#F59E0B' : '#EF4444'} 
+                                strokeWidth="12" 
+                                strokeDasharray={2 * Math.PI * 70} 
+                                strokeDashoffset={2 * Math.PI * 70 * (1 - driverInsight.score / 100)} 
+                                strokeLinecap="round"
+                                style={{ transition: 'stroke-dashoffset 1s ease-out', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
+                            />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+                            <h2 style={{ fontSize: '36px', fontWeight: 800, margin: 0, color: '#2D3748' }}>
+                                {driverInsight.isPlaceholder ? '--' : driverInsight.score}
+                            </h2>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: '#718096', margin: 0, textTransform: 'uppercase' }}>Score</p>
+                        </div>
+                    </div>
+                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#2D3748', marginBottom: '8px' }}>
+                        {driverInsight.isPlaceholder ? 'Awaiting Data...' : (driverInsight.score > 80 ? 'Excellent Driver' : driverInsight.score > 60 ? 'Good Driver' : 'Risk Detected')}
+                    </h3>
+                    <p style={{ fontSize: '14px', color: '#718096', margin: 0 }}>
+                        {isSimulating || isReplaying ? 'Real-time performance audit' : 'Overall trip behavioral average'}
+                    </p>
+                </div>
+
+                {/* Breakdown Card */}
+                <div className="dashboard-card" style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                            <SecurityIcon style={{ color: '#4F46E5' }} />
+                            Behavioral Breakdown
+                        </h3>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase' }}>
+                            {isSimulating || isReplaying ? 'Live Tracking' : 'Trip Average'}
+                        </span>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                        <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#4A5568', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <SpeedIcon style={{ fontSize: 18, color: '#EF4444' }} /> Overspeeding
+                                </span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#EF4444' }}>-{driverInsight.breakdown.overspeed} pts</span>
+                            </div>
+                            <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '3px' }}>
+                                <div style={{ height: '100%', width: `${Math.min(driverInsight.breakdown.overspeed * 2, 100)}%`, background: '#EF4444', borderRadius: '3px' }} />
+                            </div>
+                        </div>
+
+                        <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#4A5568', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <PauseCircleIcon style={{ fontSize: 18, color: '#F59E0B' }} /> Excessive Idling
+                                </span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#F59E0B' }}>-{driverInsight.breakdown.idling} pts</span>
+                            </div>
+                            <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '3px' }}>
+                                <div style={{ height: '100%', width: `${Math.min(driverInsight.breakdown.idling * 5, 100)}%`, background: '#F59E0B', borderRadius: '3px' }} />
+                            </div>
+                        </div>
+
+                        <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#4A5568', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <TrendingDownIcon style={{ fontSize: 18, color: '#6366F1' }} /> Harsh Braking
+                                </span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#6366F1' }}>-{driverInsight.breakdown.harshBraking} pts</span>
+                            </div>
+                            <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '3px' }}>
+                                <div style={{ height: '100%', width: `${Math.min(driverInsight.breakdown.harshBraking * 4, 100)}%`, background: '#6366F1', borderRadius: '3px' }} />
+                            </div>
+                            <p style={{ fontSize: '11px', color: '#718096', marginTop: '6px' }}>Detected {driverInsight.breakdown.harshBrakingCount} events</p>
+                        </div>
+
+                        <div style={{ background: '#F0FDF4', padding: '16px', borderRadius: '12px', border: '1px solid #DCFCE7', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <WarningAmberIcon style={{ color: '#10B981' }} />
+                            <div>
+                                <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#065F46', margin: 0 }}>Safety Status</h4>
+                                <p style={{ fontSize: '12px', color: '#047857', margin: 0 }}>
+                                    {driverInsight.score > 80 ? 'Minimal risk profile' : 'Improvement recommended'}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
