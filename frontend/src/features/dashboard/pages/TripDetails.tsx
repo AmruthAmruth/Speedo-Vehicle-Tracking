@@ -12,6 +12,7 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { socketService } from '../../../services/socketService';
+import { getDistance } from 'geolib';
 
 const TripDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ const TripDetails: React.FC = () => {
     const [showIdling, setShowIdling] = useState(true);
     const [isSimulating, setIsSimulating] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
         if (id) {
@@ -43,7 +44,7 @@ const TripDetails: React.FC = () => {
             };
 
             socket.on('locationUpdate', handleLocationUpdate);
-            
+
             return () => {
                 socket.off('locationUpdate', handleLocationUpdate);
                 socketService.disconnect();
@@ -114,9 +115,61 @@ const TripDetails: React.FC = () => {
         );
     }
 
-    const duration = calculateTripDuration(trip.startTime, trip.endTime);
-    const avgSpeed = duration > 0 ? (trip.totalDistance / 1000) / (duration / 3600) : 0;
-    const maxSpeed = Math.max(...gpsPoints.map(p => p.speed), 0);
+    const calculateLiveStats = () => {
+        if (gpsPoints.length === 0) return { 
+            distance: 0, 
+            avgSpeed: 0, 
+            maxSpeed: 0, 
+            idling: 0, 
+            stoppage: 0,
+            duration: 0
+        };
+
+        let distance = 0;
+        let idling = 0;
+        let stoppage = 0;
+        let maxSpeed = 0;
+
+        for (let i = 1; i < gpsPoints.length; i++) {
+            const prev = gpsPoints[i - 1];
+            const curr = gpsPoints[i];
+
+            const d = getDistance(
+                { latitude: prev.latitude, longitude: prev.longitude },
+                { latitude: curr.latitude, longitude: curr.longitude }
+            );
+            distance += d;
+
+            const timeDiff = (new Date(curr.timestamp).getTime() - new Date(prev.timestamp).getTime()) / 1000;
+            if (timeDiff > 0) {
+                if (curr.speed > maxSpeed) maxSpeed = curr.speed;
+                
+                if (prev.ignition && curr.ignition && curr.speed < 1) {
+                    idling += timeDiff;
+                } else if (!prev.ignition && !curr.ignition) {
+                    stoppage += timeDiff;
+                }
+            }
+        }
+
+        const duration = calculateTripDuration(
+            gpsPoints[0].timestamp, 
+            gpsPoints[gpsPoints.length - 1].timestamp
+        );
+        
+        const avgSpeed = duration > 0 ? (distance / 1000) / (duration / 3600) : 0;
+
+        return { 
+            distance, 
+            avgSpeed, 
+            maxSpeed, 
+            idling, 
+            stoppage,
+            duration
+        };
+    };
+
+    const stats = calculateLiveStats();
 
     return (
         <div className="trip-details">
@@ -132,8 +185,8 @@ const TripDetails: React.FC = () => {
                             <button
                                 className="btn-primary"
                                 onClick={handleStartSimulation}
-                                style={{ 
-                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 
+                                style={{
+                                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                                     border: 'none',
                                     cursor: 'pointer'
                                 }}
@@ -144,8 +197,8 @@ const TripDetails: React.FC = () => {
                             <button
                                 className="btn-primary"
                                 onClick={handleStopSimulation}
-                                style={{ 
-                                    background: '#EF4444', 
+                                style={{
+                                    background: '#EF4444',
                                     border: 'none',
                                     cursor: 'pointer'
                                 }}
@@ -154,7 +207,7 @@ const TripDetails: React.FC = () => {
                             </button>
                         )}
                     </div>
-                </div>          
+                </div>
                 <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#2d3748', margin: '0 0 8px 0' }}>
                     {trip.name}
                 </h2>
@@ -171,7 +224,7 @@ const TripDetails: React.FC = () => {
                     </div>
                     <div className="stat-content">
                         <p className="stat-label">Total Distance</p>
-                        <h3 className="stat-value">{formatDistance(trip.totalDistance)}</h3>
+                        <h3 className="stat-value">{formatDistance(stats.distance)}</h3>
                     </div>
                 </div>
 
@@ -181,7 +234,7 @@ const TripDetails: React.FC = () => {
                     </div>
                     <div className="stat-content">
                         <p className="stat-label">Duration</p>
-                        <h3 className="stat-value">{formatDuration(duration)}</h3>
+                        <h3 className="stat-value">{formatDuration(stats.duration)}</h3>
                     </div>
                 </div>
 
@@ -191,9 +244,9 @@ const TripDetails: React.FC = () => {
                     </div>
                     <div className="stat-content">
                         <p className="stat-label">Avg Speed</p>
-                        <h3 className="stat-value">{formatSpeed(avgSpeed)}</h3>
+                        <h3 className="stat-value">{formatSpeed(stats.avgSpeed)}</h3>
                         <p style={{ fontSize: '12px', color: '#718096', margin: '4px 0 0 0' }}>
-                            Max: {formatSpeed(maxSpeed)}
+                            Max: {formatSpeed(stats.maxSpeed)}
                         </p>
                     </div>
                 </div>
@@ -204,7 +257,7 @@ const TripDetails: React.FC = () => {
                     </div>
                     <div className="stat-content">
                         <p className="stat-label">Idling Time</p>
-                        <h3 className="stat-value">{formatDuration(trip.totalIdlingTime)}</h3>
+                        <h3 className="stat-value">{formatDuration(stats.idling)}</h3>
                     </div>
                 </div>
 
@@ -214,7 +267,7 @@ const TripDetails: React.FC = () => {
                     </div>
                     <div className="stat-content">
                         <p className="stat-label">Stoppage Time</p>
-                        <h3 className="stat-value">{formatDuration(trip.totalStoppageTime)}</h3>
+                        <h3 className="stat-value">{formatDuration(stats.stoppage)}</h3>
                     </div>
                 </div>
 
@@ -328,9 +381,9 @@ const TripDetails: React.FC = () => {
                             {gpsPoints
                                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                                 .map((point, index) => (
-                                    <tr 
-                                        key={point._id} 
-                                        style={{ 
+                                    <tr
+                                        key={point._id}
+                                        style={{
                                             borderBottom: '1px solid #f1f5f9',
                                             transition: 'background-color 0.2s ease'
                                         }}
@@ -340,34 +393,34 @@ const TripDetails: React.FC = () => {
                                         <td style={{ padding: '12px', color: '#94a3b8', fontSize: '13px' }}>
                                             {(currentPage - 1) * itemsPerPage + index + 1}
                                         </td>
-                                    <td style={{ padding: '12px', color: '#2d3748', fontSize: '13px' }}>
-                                        {new Date(point.timestamp).toLocaleString()}
-                                    </td>
-                                    <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
-                                        {point.latitude.toFixed(6)}
-                                    </td>
-                                    <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
-                                        {point.longitude.toFixed(6)}
-                                    </td>
-                                    <td style={{ padding: '12px', color: '#2d3748' }}>
-                                        {formatSpeed(point.speed)}
-                                    </td>
-                                    <td style={{ padding: '12px' }}>
-                                        <span
-                                            style={{
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                fontWeight: 600,
-                                                background: point.ignition ? '#d1fae5' : '#fee2e2',
-                                                color: point.ignition ? '#065f46' : '#991b1b',
-                                            }}
-                                        >
-                                            {point.ignition ? 'ON' : 'OFF'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td style={{ padding: '12px', color: '#2d3748', fontSize: '13px' }}>
+                                            {new Date(point.timestamp).toLocaleString()}
+                                        </td>
+                                        <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
+                                            {point.latitude.toFixed(6)}
+                                        </td>
+                                        <td style={{ padding: '12px', color: '#718096', fontFamily: 'monospace' }}>
+                                            {point.longitude.toFixed(6)}
+                                        </td>
+                                        <td style={{ padding: '12px', color: '#2d3748' }}>
+                                            {formatSpeed(point.speed)}
+                                        </td>
+                                        <td style={{ padding: '12px' }}>
+                                            <span
+                                                style={{
+                                                    padding: '4px 8px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    background: point.ignition ? '#d1fae5' : '#fee2e2',
+                                                    color: point.ignition ? '#065f46' : '#991b1b',
+                                                }}
+                                            >
+                                                {point.ignition ? 'ON' : 'OFF'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
@@ -393,7 +446,7 @@ const TripDetails: React.FC = () => {
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', color: '#64748b' }}>Rows per page:</span>
-                            <select 
+                            <select
                                 value={itemsPerPage}
                                 onChange={(e) => {
                                     setItemsPerPage(Number(e.target.value));
@@ -416,9 +469,9 @@ const TripDetails: React.FC = () => {
                             </select>
                         </div>
                     </div>
-                    
+
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button 
+                        <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
                             style={{
@@ -459,11 +512,11 @@ const TripDetails: React.FC = () => {
                             {Array.from({ length: Math.ceil(gpsPoints.length / itemsPerPage) }, (_, i) => {
                                 const pageNum = i + 1;
                                 const totalPages = Math.ceil(gpsPoints.length / itemsPerPage);
-                                
+
                                 // Show first, last, and pages around current
                                 if (
-                                    pageNum === 1 || 
-                                    pageNum === totalPages || 
+                                    pageNum === 1 ||
+                                    pageNum === totalPages ||
                                     (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
                                 ) {
                                     return (
@@ -501,9 +554,9 @@ const TripDetails: React.FC = () => {
                                         </button>
                                     );
                                 }
-                                
+
                                 if (
-                                    (pageNum === 2 && currentPage > 3) || 
+                                    (pageNum === 2 && currentPage > 3) ||
                                     (pageNum === totalPages - 1 && currentPage < totalPages - 2)
                                 ) {
                                     return <span key={pageNum} style={{ color: '#94a3b8', padding: '0 4px', alignSelf: 'center' }}>...</span>;
@@ -513,7 +566,7 @@ const TripDetails: React.FC = () => {
                             })}
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setCurrentPage(prev => Math.min(Math.ceil(gpsPoints.length / itemsPerPage), prev + 1))}
                             disabled={currentPage >= Math.ceil(gpsPoints.length / itemsPerPage) || gpsPoints.length === 0}
                             style={{
