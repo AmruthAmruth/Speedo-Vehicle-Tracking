@@ -316,6 +316,28 @@ const TripDetails: React.FC = () => {
                                 🛑 Stop Simulation
                             </button>
                         )}
+                        {trip.isActive && (
+                            <button
+                                className="btn-primary"
+                                onClick={async () => {
+                                    if (window.confirm('Are you sure you want to end this live trip?')) {
+                                        try {
+                                            await tripApi.stopLiveTrip(id!);
+                                            loadTripData();
+                                        } catch (error) {
+                                            console.error('Failed to stop live trip:', error);
+                                        }
+                                    }
+                                }}
+                                style={{
+                                    background: '#EF4444',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ⏹️ End Live Trip
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 8px 0' }}>

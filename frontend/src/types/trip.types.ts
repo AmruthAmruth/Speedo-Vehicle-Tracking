@@ -7,6 +7,7 @@ export interface Trip {
     totalDistance: number;
     totalIdlingTime: number;
     totalStoppageTime: number;
+    isActive?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -19,6 +20,7 @@ export interface GPSPoint {
     timestamp: string;
     ignition: boolean;
     speed: number;
+    heading?: number;
 }
 
 export interface TripUploadResponse {

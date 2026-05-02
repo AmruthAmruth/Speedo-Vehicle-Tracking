@@ -18,7 +18,7 @@ const TripSchema = new mongoose_1.Schema({
     },
     endTime: {
         type: Date,
-        required: true
+        required: false
     },
     totalDistance: {
         type: Number,
@@ -31,6 +31,10 @@ const TripSchema = new mongoose_1.Schema({
     totalStoppageTime: {
         type: Number,
         default: 0
+    },
+    isActive: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

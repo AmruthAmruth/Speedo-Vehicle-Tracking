@@ -17,14 +17,14 @@ const http_constants_1 = require("../shared/constants/http.constants");
 const asyncHandler_1 = require("../shared/utils/asyncHandler");
 const tsyringe_1 = require("tsyringe");
 let AuthController = class AuthController {
-    constructor(authService) {
-        this.authService = authService;
+    constructor(_authService) {
+        this._authService = _authService;
         this.register = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const user = await this.authService.register(req.body);
+            const user = await this._authService.register(req.body);
             res.status(http_constants_1.HTTP_STATUS.CREATED).json(user);
         });
         this.login = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const result = await this.authService.login(req.body);
+            const result = await this._authService.login(req.body);
             res.status(http_constants_1.HTTP_STATUS.OK).json(result);
         });
     }

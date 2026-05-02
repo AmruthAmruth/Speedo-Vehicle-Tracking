@@ -7,6 +7,7 @@ export interface IGPSPoint extends Document {
   timestamp: Date;
   ignition: boolean;
   speed: number; 
+  heading: number; 
 }
 
 const GPSPointSchema = new Schema<IGPSPoint>(
@@ -33,6 +34,10 @@ const GPSPointSchema = new Schema<IGPSPoint>(
       required: true
     },
     speed: {
+      type: Number,
+      default: 0
+    },
+    heading: {
       type: Number,
       default: 0
     }

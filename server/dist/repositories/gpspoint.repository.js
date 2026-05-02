@@ -10,6 +10,10 @@ exports.GPSPointRepository = void 0;
 const GPSPoint_model_1 = require("../models/GPSPoint.model");
 const tsyringe_1 = require("tsyringe");
 let GPSPointRepository = class GPSPointRepository {
+    async create(point) {
+        const newPoint = new GPSPoint_model_1.GPSPointModel(point);
+        return await newPoint.save();
+    }
     async bulkCreate(points, session) {
         let result;
         if (session) {

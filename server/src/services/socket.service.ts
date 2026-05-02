@@ -1,5 +1,8 @@
 import { Server as SocketServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+import { redisConfig } from '../shared/config/redis.config';
 import { injectable, singleton } from 'tsyringe';
 import { container } from '../di/container';
 import { IGPSQueueService } from '../interfaces/IGPSQueueService';
@@ -15,6 +18,29 @@ export class SocketService {
                 origin: '*',
                 methods: ['GET', 'POST']
             }
+        });
+
+        // Configure Redis Adapter for horizontal scaling
+        const protocol = redisConfig.tls ? 'rediss' : 'redis';
+        const clientOptions: any = {
+            url: `${protocol}://${redisConfig.password ? `:${redisConfig.password}@` : ''}${redisConfig.host}:${redisConfig.port}`,
+        };
+
+        if (redisConfig.tls) {
+            clientOptions.socket = {
+                tls: true,
+                rejectUnauthorized: false
+            };
+        }
+
+        const pubClient = createClient(clientOptions);
+        const subClient = pubClient.duplicate();
+
+        Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+            this._io?.adapter(createAdapter(pubClient, subClient));
+            console.log('🔄 Socket.IO Redis Adapter linked');
+        }).catch(err => {
+            console.error('🚨 Failed to connect Redis Adapter:', err);
         });
 
         this._io.on('connection', (socket) => {

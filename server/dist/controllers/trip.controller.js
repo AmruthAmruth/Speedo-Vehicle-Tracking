@@ -17,11 +17,65 @@ const http_constants_1 = require("../shared/constants/http.constants");
 const asyncHandler_1 = require("../shared/utils/asyncHandler");
 const errors_1 = require("../shared/types/errors");
 const tsyringe_1 = require("tsyringe");
+const simulation_service_1 = require("../services/simulation.service");
 let TripController = class TripController {
-    constructor(service, tripRepo, gpsRepo) {
-        this.service = service;
-        this.tripRepo = tripRepo;
-        this.gpsRepo = gpsRepo;
+    constructor(_service, _tripRepo, _gpsRepo, _simulationService) {
+        this._service = _service;
+        this._tripRepo = _tripRepo;
+        this._gpsRepo = _gpsRepo;
+        this._simulationService = _simulationService;
+        this.startLiveTrip = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            if (!req.user) {
+                throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+            }
+            const { name } = req.body;
+            const trip = await this._tripRepo.create({
+                userId: req.user.userId,
+                name: name || `Live Trip ${new Date().toLocaleString()}`,
+                startTime: new Date(),
+                isActive: true
+            });
+            res.status(http_constants_1.HTTP_STATUS.CREATED).json({
+                message: 'Live trip started successfully',
+                trip
+            });
+        });
+        this.stopLiveTrip = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            if (!req.user) {
+                throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+            }
+            const { id } = req.params;
+            const trip = await this._tripRepo.findById(id);
+            if (!trip) {
+                throw new errors_1.NotFoundError(http_constants_1.HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
+            }
+            if (trip.userId.toString() !== req.user.userId) {
+                throw new errors_1.ForbiddenError(http_constants_1.HTTP_MESSAGES.TRIP.ACCESS_DENIED);
+            }
+            const updatedTrip = await this._tripRepo.update(id, {
+                isActive: false,
+                endTime: new Date()
+            });
+            res.status(http_constants_1.HTTP_STATUS.OK).json({
+                message: 'Live trip stopped successfully',
+                trip: updatedTrip
+            });
+        });
+        this.startSimulation = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { id } = req.params;
+            // Start simulation in background
+            this._simulationService.startSimulation(id);
+            res.status(http_constants_1.HTTP_STATUS.OK).json({
+                message: 'Simulation started successfully'
+            });
+        });
+        this.stopSimulation = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { id } = req.params;
+            this._simulationService.stopSimulation(id);
+            res.status(http_constants_1.HTTP_STATUS.OK).json({
+                message: 'Simulation stopped successfully'
+            });
+        });
         this.uploadTrip = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             if (!req.user) {
                 throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
@@ -30,7 +84,7 @@ let TripController = class TripController {
                 throw new errors_1.BadRequestError(http_constants_1.HTTP_MESSAGES.TRIP.NO_FILE_UPLOADED);
             }
             try {
-                const result = await this.service.uploadTrip(req.user.userId, req.file.buffer);
+                const result = await this._service.uploadTrip(req.user.userId, req.file.buffer);
                 res.status(http_constants_1.HTTP_STATUS.CREATED).json({
                     message: http_constants_1.HTTP_MESSAGES.TRIP.TRIP_UPLOADED_SUCCESSFULLY,
                     tripId: result.trip._id,
@@ -53,7 +107,7 @@ let TripController = class TripController {
             if (!req.user) {
                 throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
             }
-            const trips = await this.tripRepo.findByUserId(req.user.userId);
+            const trips = await this._tripRepo.findByUserId(req.user.userId);
             res.status(http_constants_1.HTTP_STATUS.OK).json({
                 trips,
                 count: trips.length
@@ -64,7 +118,7 @@ let TripController = class TripController {
                 throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
             }
             const { id } = req.params;
-            const trip = await this.tripRepo.findById(id);
+            const trip = await this._tripRepo.findById(id);
             if (!trip) {
                 throw new errors_1.NotFoundError(http_constants_1.HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
             }
@@ -78,14 +132,14 @@ let TripController = class TripController {
                 throw new errors_1.UnauthorizedError(http_constants_1.HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
             }
             const { id } = req.params;
-            const trip = await this.tripRepo.findById(id);
+            const trip = await this._tripRepo.findById(id);
             if (!trip) {
                 throw new errors_1.NotFoundError(http_constants_1.HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
             }
             if (trip.userId.toString() !== req.user.userId) {
                 throw new errors_1.ForbiddenError(http_constants_1.HTTP_MESSAGES.TRIP.ACCESS_DENIED);
             }
-            const gpsPoints = await this.gpsRepo.findByTripId(id);
+            const gpsPoints = await this._gpsRepo.findByTripId(id);
             res.status(http_constants_1.HTTP_STATUS.OK).json({
                 gpsPoints,
                 count: gpsPoints.length
@@ -99,5 +153,6 @@ exports.TripController = TripController = __decorate([
     __param(0, (0, tsyringe_1.inject)('ITripUploadService')),
     __param(1, (0, tsyringe_1.inject)('ITripRepository')),
     __param(2, (0, tsyringe_1.inject)('IGPSPointRepository')),
-    __metadata("design:paramtypes", [Object, Object, Object])
+    __param(3, (0, tsyringe_1.inject)('SimulationService')),
+    __metadata("design:paramtypes", [Object, Object, Object, simulation_service_1.SimulationService])
 ], TripController);

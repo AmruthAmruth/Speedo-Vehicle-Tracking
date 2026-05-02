@@ -12,7 +12,10 @@ const connectDB = async () => {
             console.error('❌ MONGO_URI is not defined in .env');
             process.exit(1);
         }
-        await mongoose_1.default.connect(process.env.MONGO_URI);
+        await mongoose_1.default.connect(process.env.MONGO_URI, {
+            family: 4,
+            connectTimeoutMS: 10000,
+        });
         console.log('MongoDB connected successfully.!');
     }
     catch (error) {

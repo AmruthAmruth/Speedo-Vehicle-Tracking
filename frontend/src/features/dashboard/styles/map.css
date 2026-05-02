@@ -267,3 +267,23 @@
     font-size: 14px;
     color: #9ca3af;
 }
+
+/* Live Vehicle Icon */
+.live-vehicle-icon {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.live-vehicle-marker-wrapper {
+    transition: transform 0.5s ease-out;
+}
+
+@keyframes pulse-anim {
+    0% {
+        transform: scale(0.6);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}

@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
+dotenv.config();
+
 import dns from 'dns';
 
 // Force use of Google DNS to bypass local SRV resolution issues
@@ -11,8 +13,6 @@ import { connectDB } from './shared/config/db';
 import { createServer } from 'http';
 import { SocketService } from './services/socket.service';
 import { GPSWorker } from './workers/gps.worker';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 7000;
 const httpServer = createServer(app);

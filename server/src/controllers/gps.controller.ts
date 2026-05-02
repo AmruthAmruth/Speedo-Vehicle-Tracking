@@ -23,7 +23,7 @@ export class GPSController {
     }
 
     // 2. Add to Queue (Producer)
-    await this._queueService.addGPSJob(tripId, gpsPoint);
+    await this._queueService.addGPSJob(tripId as string, gpsPoint);
 
     // 3. Respond immediately (202 Accepted)
     res.status(HTTP_STATUS.ACCEPTED).json({

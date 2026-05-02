@@ -27,6 +27,10 @@ const GPSPointSchema = new mongoose_1.Schema({
     speed: {
         type: Number,
         default: 0
+    },
+    heading: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: false

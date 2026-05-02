@@ -177,11 +177,10 @@ const TripMap: React.FC<TripMapProps> = ({
             const vehicleIcon = L.divIcon({
                 className: 'live-vehicle-icon',
                 html: `
-                    <div style="background: #4F46E5; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(79, 70, 229, 0.6); position: relative; display: flex; align-items: center; justify-content: center;">
-                        <div style="position: absolute; top: -8px; left: -8px; width: 36px; height: 36px; background: rgba(79, 70, 229, 0.2); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
-                        <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid white; transform: rotate(${activePoint.heading || 0}deg);"></div>
+                    <div class="live-vehicle-marker-wrapper" style="background: #4F46E5; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(79, 70, 229, 0.6); position: relative; display: flex; align-items: center; justify-content: center; transform: rotate(${activePoint.heading || 0}deg);">
+                        <div style="position: absolute; top: -8px; left: -8px; width: 38px; height: 38px; background: rgba(79, 70, 229, 0.2); border-radius: 50%; animation: pulse-anim 2s infinite;"></div>
+                        <div style="width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid white; margin-bottom: 2px;"></div>
                     </div>
-                    <style>@keyframes pulse-anim { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }</style>
                 `,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20]

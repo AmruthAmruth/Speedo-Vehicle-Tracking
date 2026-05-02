@@ -14,7 +14,8 @@ import {
     Stop as StopIcon, 
     ArrowBack as ArrowBackIcon,
     Speed as SpeedIcon,
-    Timer as TimerIcon
+    Timer as TimerIcon,
+    CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { socketService } from '../../../services/socketService';
 import { tripApi } from '../../../services/tripApi';
@@ -25,7 +26,7 @@ const MobileTracker: React.FC = () => {
     const navigate = useNavigate();
     
     const [isTracking, setIsTracking] = useState(false);
-    const [status, setStatus] = useState<'idle' | 'tracking' | 'error'>('idle');
+    const [status, setStatus] = useState<'idle' | 'tracking' | 'error' | 'finished'>('idle');
     const [error, setError] = useState<string | null>(null);
     const [currentPoint, setCurrentPoint] = useState<{
         latitude: number;
@@ -45,7 +46,7 @@ const MobileTracker: React.FC = () => {
         }
 
         return () => {
-            stopTracking();
+            if (isTracking) stopTracking();
         };
     }, [id]);
 
@@ -81,7 +82,7 @@ const MobileTracker: React.FC = () => {
                     speed: (speed || 0) * 3.6, // Convert m/s to km/h
                     heading: heading || 0,
                     timestamp: new Date(timestamp).toISOString(),
-                    ignition: true // Default to true for mobile tracking
+                    ignition: true 
                 };
 
                 setCurrentPoint({
@@ -94,7 +95,6 @@ const MobileTracker: React.FC = () => {
                 // Emit to server
                 if (id) {
                     socketService.emitLocationUpdate(id, point);
-                    console.log("📡 Emitted point:", point);
                 }
             },
             (err) => {
@@ -118,22 +118,57 @@ const MobileTracker: React.FC = () => {
         }
 
         setIsTracking(false);
-        setStatus('idle');
 
         if (id) {
             try {
                 await tripApi.stopLiveTrip(id);
-                // Optionally navigate to trip details or summary
+                setStatus('finished');
             } catch (err) {
                 console.error("Failed to stop live trip:", err);
+                setStatus('idle');
             }
+        } else {
+            setStatus('idle');
         }
     };
+
+    if (status === 'finished') {
+        return (
+            <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
+                <Paper elevation={3} sx={{ p: 6, borderRadius: 6 }}>
+                    <CheckCircleIcon color="success" sx={{ fontSize: 100, mb: 3 }} />
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>Trip Completed!</Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                        Your trip data has been successfully saved and processed.
+                    </Typography>
+                    <Box sx={{ bgcolor: 'grey.50', p: 3, borderRadius: 4, mb: 4, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">Total Duration</Typography>
+                            <Typography variant="h6" fontWeight="bold">{formatDuration(duration)}</Typography>
+                        </Box>
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">Points Captured</Typography>
+                            <Typography variant="h6" fontWeight="bold">Live</Typography>
+                        </Box>
+                    </Box>
+                    <Button 
+                        variant="contained" 
+                        fullWidth 
+                        size="large"
+                        onClick={() => navigate('/dashboard')}
+                        sx={{ borderRadius: 3, py: 2, fontWeight: 'bold' }}
+                    >
+                        Go to Dashboard
+                    </Button>
+                </Paper>
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="sm" sx={{ py: 4, height: '100vh', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-                <IconButton onClick={() => navigate(-1)} sx={{ mr: 1 }}>
+                <IconButton onClick={() => navigate('/dashboard')} sx={{ mr: 1 }}>
                     <ArrowBackIcon />
                 </IconButton>
                 <Typography variant="h5" fontWeight="bold">Mobile Tracker</Typography>

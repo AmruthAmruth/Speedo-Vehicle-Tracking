@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    Typography, 
+    IconButton, 
+    Box,
+    Button
+} from '@mui/material';
+import { Close as CloseIcon, QrCode2 as QrCodeIcon } from '@mui/icons-material';
+import { QRCodeSVG } from 'qrcode.react';
 import { tripApi } from '../../../services/tripApi';
 import { Trip } from '../../../types/trip.types';
 import { formatDistance, formatDuration, calculateTripDuration } from '../../../utils/tripUtils';
@@ -13,6 +24,9 @@ import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 const DashboardOverview: React.FC = () => {
     const [trips, setTrips] = useState<Trip[]>([]);
     const [loading, setLoading] = useState(true);
+    const [qrModalOpen, setQrModalOpen] = useState(false);
+    const [activeTripId, setActiveTripId] = useState<string | null>(null);
+    
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -30,13 +44,25 @@ const DashboardOverview: React.FC = () => {
         }
     };
 
+    const handleStartLiveTracking = async () => {
+        try {
+            const response = await tripApi.startLiveTrip();
+            setActiveTripId(response.trip._id);
+            setQrModalOpen(true);
+            // Refresh list to show new active trip
+            loadTrips();
+        } catch (error) {
+            console.error('Failed to start live trip:', error);
+        }
+    };
+
     const calculateStats = () => {
         const totalTrips = trips.length;
-        const totalDistance = trips.reduce((sum, trip) => sum + trip.totalDistance, 0);
+        const totalDistance = trips.reduce((sum, trip) => sum + (trip.totalDistance || 0), 0);
         const totalDuration = trips.reduce((sum, trip) =>
             sum + calculateTripDuration(trip.startTime, trip.endTime), 0
         );
-        const totalIdling = trips.reduce((sum, trip) => sum + trip.totalIdlingTime, 0);
+        const totalIdling = trips.reduce((sum, trip) => sum + (trip.totalIdlingTime || 0), 0);
 
         return {
             totalTrips,
@@ -48,6 +74,11 @@ const DashboardOverview: React.FC = () => {
 
     const stats = calculateStats();
     const recentTrips = trips.slice(0, 5);
+
+    // Construct the live tracking URL for mobile
+    const trackingUrl = activeTripId 
+        ? `${window.location.origin}/dashboard/track/${activeTripId}`
+        : '';
 
     if (loading) {
         return (
@@ -125,14 +156,7 @@ const DashboardOverview: React.FC = () => {
                     <button 
                         className="btn-primary" 
                         style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}
-                        onClick={async () => {
-                            try {
-                                const response = await tripApi.startLiveTrip();
-                                navigate(`/dashboard/track/${response.trip._id}`);
-                            } catch (error) {
-                                console.error('Failed to start live trip:', error);
-                            }
-                        }}
+                        onClick={handleStartLiveTracking}
                     >
                         <GpsFixedIcon />
                         Start Live Tracking
@@ -179,8 +203,25 @@ const DashboardOverview: React.FC = () => {
                             </thead>
                             <tbody>
                                 {recentTrips.map((trip) => (
-                                    <tr key={trip._id} className="border-b border-light-border">
-                                        <td className="p-4 font-semibold text-text-primary">{trip.name}</td>
+                                    <tr key={trip._id} className="border-b border-light-border hover:bg-slate-50 transition-colors">
+                                        <td className="p-4">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span className="font-semibold text-text-primary">{trip.name}</span>
+                                                {trip.isActive && (
+                                                    <span style={{
+                                                        background: '#EF4444',
+                                                        color: 'white',
+                                                        fontSize: '10px',
+                                                        fontWeight: 800,
+                                                        padding: '2px 6px',
+                                                        borderRadius: '4px',
+                                                        animation: 'pulse-live 2s infinite'
+                                                    }}>
+                                                        LIVE
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="p-4 text-text-secondary">
                                             {new Date(trip.startTime).toLocaleDateString()}
                                         </td>
@@ -188,7 +229,7 @@ const DashboardOverview: React.FC = () => {
                                             {formatDistance(trip.totalDistance)}
                                         </td>
                                         <td className="p-4 text-text-secondary">
-                                            {formatDuration(calculateTripDuration(trip.startTime, trip.endTime))}
+                                            {trip.isActive ? 'Ongoing' : formatDuration(calculateTripDuration(trip.startTime, trip.endTime))}
                                         </td>
                                         <td className="p-4">
                                             <button
@@ -205,6 +246,57 @@ const DashboardOverview: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* QR Code Handshake Modal */}
+            <Dialog 
+                open={qrModalOpen} 
+                onClose={() => setQrModalOpen(false)}
+                PaperProps={{
+                    sx: { borderRadius: 4, p: 2, maxWidth: '400px' }
+                }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight="bold">Link Mobile Device</Typography>
+                    <IconButton onClick={() => setQrModalOpen(false)}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', py: 2 }}>
+                        <Box sx={{ 
+                            p: 3, 
+                            bgcolor: 'white', 
+                            borderRadius: 4, 
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                            mb: 3
+                        }}>
+                            <QRCodeSVG value={trackingUrl} size={250} level="H" includeMargin />
+                        </Box>
+                        <Typography variant="body1" color="text.primary" fontWeight="600" gutterBottom>
+                            Scan to start tracking
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                            Open your phone camera or QR scanner to link this trip session to your mobile device.
+                        </Typography>
+                        <Button 
+                            variant="contained" 
+                            fullWidth 
+                            onClick={() => navigate(`/dashboard/trips/${activeTripId}`)}
+                            sx={{ borderRadius: 2, py: 1.5, fontWeight: 'bold' }}
+                        >
+                            Open Dashboard View
+                        </Button>
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
+            <style>{`
+                @keyframes pulse-live {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

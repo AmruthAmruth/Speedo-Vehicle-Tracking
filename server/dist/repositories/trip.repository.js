@@ -24,6 +24,9 @@ let TripRepository = class TripRepository {
     async findById(id) {
         return Trip_model_1.TripModel.findById(id).lean();
     }
+    async update(id, data, session) {
+        return Trip_model_1.TripModel.findByIdAndUpdate(id, data, { new: true, session }).lean();
+    }
 };
 exports.TripRepository = TripRepository;
 exports.TripRepository = TripRepository = __decorate([
