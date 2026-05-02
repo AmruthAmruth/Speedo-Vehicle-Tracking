@@ -8,6 +8,7 @@ export interface ITrip extends Document {
   totalDistance: number;        
   totalIdlingTime: number;      
   totalStoppageTime: number;    
+  isActive: boolean;            
   createdAt: Date;
 }
 
@@ -28,7 +29,7 @@ const TripSchema = new Schema<ITrip>(
     },
     endTime: {
       type: Date,
-      required: true
+      required: false
     },
     totalDistance: {
       type: Number,
@@ -41,6 +42,10 @@ const TripSchema = new Schema<ITrip>(
     totalStoppageTime: {
       type: Number,
       default: 0
+    },
+    isActive: {
+      type: Boolean,
+      default: false
     }
   },
   {

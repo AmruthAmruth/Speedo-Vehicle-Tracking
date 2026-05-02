@@ -8,6 +8,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import RouteIcon from '@mui/icons-material/Route';
 import SpeedIcon from '@mui/icons-material/Speed';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 
 const DashboardOverview: React.FC = () => {
     const [trips, setTrips] = useState<Trip[]>([]);
@@ -120,6 +121,21 @@ const DashboardOverview: React.FC = () => {
                     <button className="btn-primary" onClick={() => navigate('/dashboard/upload')}>
                         <UploadFileIcon />
                         Upload New Trip
+                    </button>
+                    <button 
+                        className="btn-primary" 
+                        style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}
+                        onClick={async () => {
+                            try {
+                                const response = await tripApi.startLiveTrip();
+                                navigate(`/dashboard/track/${response.trip._id}`);
+                            } catch (error) {
+                                console.error('Failed to start live trip:', error);
+                            }
+                        }}
+                    >
+                        <GpsFixedIcon />
+                        Start Live Tracking
                     </button>
                     <button className="btn-secondary" onClick={() => navigate('/dashboard/trips')}>
                         View All Trips

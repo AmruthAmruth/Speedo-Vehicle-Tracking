@@ -26,6 +26,59 @@ export class TripController {
     @inject('SimulationService') private _simulationService: SimulationService
   ) { }
 
+  startLiveTrip = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+    }
+
+    const { name } = req.body;
+
+    const trip = await this._tripRepo.create({
+      userId: req.user.userId as any,
+      name: name || `Live Trip ${new Date().toLocaleString()}`,
+      startTime: new Date(),
+      isActive: true
+    });
+
+    res.status(HTTP_STATUS.CREATED).json({
+      message: 'Live trip started successfully',
+      trip
+    });
+  });
+
+  stopLiveTrip = asyncHandler(async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    if (!req.user) {
+      throw new UnauthorizedError(HTTP_MESSAGES.AUTH.USER_NOT_AUTHENTICATED);
+    }
+
+    const { id } = req.params;
+    const trip = await this._tripRepo.findById(id as string);
+
+    if (!trip) {
+      throw new NotFoundError(HTTP_MESSAGES.TRIP.TRIP_NOT_FOUND);
+    }
+
+    if (trip.userId.toString() !== req.user.userId) {
+      throw new ForbiddenError(HTTP_MESSAGES.TRIP.ACCESS_DENIED);
+    }
+
+    const updatedTrip = await this._tripRepo.update(id as string, {
+      isActive: false,
+      endTime: new Date()
+    });
+
+    res.status(HTTP_STATUS.OK).json({
+      message: 'Live trip stopped successfully',
+      trip: updatedTrip
+    });
+  });
+
   startSimulation = asyncHandler(async (
     req: AuthRequest,
     res: Response

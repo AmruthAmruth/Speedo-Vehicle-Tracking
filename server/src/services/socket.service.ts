@@ -1,6 +1,8 @@
 import { Server as SocketServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { injectable, singleton } from 'tsyringe';
+import { container } from '../di/container';
+import { IGPSQueueService } from '../interfaces/IGPSQueueService';
 
 @singleton()
 @injectable()
@@ -21,6 +23,15 @@ export class SocketService {
             socket.on('joinTrip', (tripId: string) => {
                 socket.join(tripId);
                 console.log(`📡 Client ${socket.id} joined trip room: ${tripId}`);
+            });
+
+            socket.on('locationUpdate', async (data: { tripId: string, point: any }) => {
+                const { tripId, point } = data;
+                console.log(`📥 Received live point for trip ${tripId}`);
+                
+                // Add to queue for processing and broadcasting
+                const queueService = container.resolve<IGPSQueueService>('IGPSQueueService');
+                await queueService.addGPSJob(tripId, point);
             });
 
             socket.on('disconnect', () => {

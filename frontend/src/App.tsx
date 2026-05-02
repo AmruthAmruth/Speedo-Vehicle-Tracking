@@ -8,6 +8,7 @@ import DashboardOverview from './features/dashboard/pages/DashboardOverview';
 import TripUpload from './features/dashboard/pages/TripUpload';
 import TripList from './features/dashboard/pages/TripList';
 import TripDetails from './features/dashboard/pages/TripDetails';
+import MobileTracker from './features/dashboard/pages/MobileTracker';
 
 import { APP_ROUTES } from './constants/routes';
 
@@ -33,6 +34,7 @@ const App = () => {
         <Route path={APP_ROUTES.DASHBOARD.UPLOAD} element={<TripUpload />} />
         <Route path={APP_ROUTES.DASHBOARD.TRIPS} element={<TripList />} />
         <Route path={APP_ROUTES.DASHBOARD.TRIP_DETAILS} element={<TripDetails />} />
+        <Route path={APP_ROUTES.DASHBOARD.MOBILE_TRACKER} element={<MobileTracker />} />
       </Route>
     </Routes>
   );

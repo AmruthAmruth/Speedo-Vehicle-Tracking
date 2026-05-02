@@ -11,6 +11,7 @@ export const APP_ROUTES = {
         UPLOAD: 'upload', // Relative path for nested route
         TRIPS: 'trips',   // Relative path for nested route
         TRIP_DETAILS: 'trips/:id', // Relative path for nested route
+        MOBILE_TRACKER: 'track/:id', // Mobile tracking page
         ANALYTICS: 'analytics', // Relative path
         SETTINGS: 'settings', // Relative path
     },

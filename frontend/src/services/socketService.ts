@@ -51,6 +51,12 @@ class SocketService {
         }
     }
 
+    emitLocationUpdate(tripId: string, point: any) {
+        if (this.socket) {
+            this.socket.emit('locationUpdate', { tripId, point });
+        }
+    }
+
     disconnect() {
         if (this.socket) {
             this.socket.disconnect();

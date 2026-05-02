@@ -15,6 +15,18 @@ tripRouter.post(
   tripController.uploadTrip
 );
 
+tripRouter.post(
+  '/live/start',
+  authMiddleware,
+  tripController.startLiveTrip
+);
+
+tripRouter.post(
+  '/:id/live/stop',
+  authMiddleware,
+  tripController.stopLiveTrip
+);
+
 tripRouter.get(
   '/user',
   authMiddleware,

@@ -12,5 +12,7 @@ export const API_ROUTES = {
         USER_TRIPS: '/trip/user',
         GET_BY_ID: (id: string) => `/trip/${id}`,
         GET_GPS_POINTS: (id: string) => `/trip/${id}/gpspoints`,
+        START_LIVE: '/trip/live/start',
+        STOP_LIVE: (id: string) => `/trip/${id}/live/stop`,
     },
 } as const;

@@ -318,12 +318,39 @@ const TripDetails: React.FC = () => {
                         )}
                     </div>
                 </div>
-                <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#2d3748', margin: '0 0 8px 0' }}>
-                    {trip.name}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 8px 0' }}>
+                    <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#2d3748', margin: 0 }}>
+                        {trip.name}
+                    </h2>
+                    {trip.isActive && (
+                        <span style={{
+                            background: '#EF4444',
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
+                            animation: 'pulse-live 2s infinite'
+                        }}>
+                            <span style={{ width: '6px', height: '6px', background: 'white', borderRadius: '50%' }}></span>
+                            LIVE
+                        </span>
+                    )}
+                </div>
                 <p style={{ fontSize: '14px', color: '#718096', margin: 0 }}>
-                    {formatDate(trip.startTime)} - {formatDate(trip.endTime)}
+                    {formatDate(trip.startTime)} {trip.isActive ? '- Ongoing' : `- ${formatDate(trip.endTime)}`}
                 </p>
+                <style>{`
+                    @keyframes pulse-live {
+                        0% { opacity: 1; }
+                        50% { opacity: 0.6; }
+                        100% { opacity: 1; }
+                    }
+                `}</style>
             </div>
 
             {/* Stats Grid */}

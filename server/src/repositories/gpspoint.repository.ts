@@ -5,6 +5,11 @@ import { injectable } from 'tsyringe';
 
 @injectable()
 export class GPSPointRepository implements IGPSPointRepository {
+  async create(point: Partial<IGPSPoint>): Promise<IGPSPoint> {
+    const newPoint = new GPSPointModel(point);
+    return await newPoint.save();
+  }
+
   async bulkCreate(points: Partial<IGPSPoint>[], session?: ClientSession): Promise<IGPSPoint[]> {
     let result;
     if (session) {
