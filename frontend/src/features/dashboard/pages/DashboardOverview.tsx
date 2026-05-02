@@ -9,7 +9,7 @@ import {
     Box,
     Button
 } from '@mui/material';
-import { Close as CloseIcon, QrCode2 as QrCodeIcon } from '@mui/icons-material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { QRCodeSVG } from 'qrcode.react';
 import { tripApi } from '../../../services/tripApi';
 import { Trip } from '../../../types/trip.types';

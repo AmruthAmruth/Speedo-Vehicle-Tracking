@@ -74,7 +74,8 @@ const MobileTracker: React.FC = () => {
 
         watchIdRef.current = navigator.geolocation.watchPosition(
             (position) => {
-                const { latitude, longitude, speed, heading, timestamp } = position.coords;
+                const { latitude, longitude, speed, heading } = position.coords;
+                const timestamp = position.timestamp;
                 
                 const point = {
                     latitude,
