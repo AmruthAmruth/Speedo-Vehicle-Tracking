@@ -42,7 +42,6 @@ export class TripController {
     });
   });
 
-  /** Batch HTTP fallback — accepts an array of GPS points (used by background sync) */
   batchLocations = asyncHandler(async (
     req: AuthRequest,
     res: Response

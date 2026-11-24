@@ -1,211 +1,114 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { COLORS } from '../../../constants/constants';
-import SpeedIcon from '@mui/icons-material/Speed';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import MapIcon from '@mui/icons-material/Map';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const HeroSection: React.FC = () => {
     const navigate = useNavigate();
 
-    const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
+    const scrollToHow = () => {
+        document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     return (
-        <section
-            id="hero"
-            style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.accent} 50%, ${COLORS.secondary} 100%)`,
-                position: 'relative',
-                overflow: 'hidden',
-                padding: '2rem',
-            }}
-        >
-            {/* Subtle Floating Icons */}
-            <div className="hero-bg-animation">
-                <div className="floating-icon" style={{ animation: 'float 6s ease-in-out infinite' }}>
-                    <SpeedIcon style={{ fontSize: '3rem', color: 'rgba(255, 255, 255, 0.08)' }} />
-                </div>
-                <div className="floating-icon" style={{ animation: 'float 7s ease-in-out infinite', animationDelay: '1s' }}>
-                    <TrendingUpIcon style={{ fontSize: '2.5rem', color: 'rgba(255, 255, 255, 0.08)' }} />
-                </div>
-                <div className="floating-icon" style={{ animation: 'float 8s ease-in-out infinite', animationDelay: '2s' }}>
-                    <MapIcon style={{ fontSize: '3.5rem', color: 'rgba(255, 255, 255, 0.08)' }} />
-                </div>
-            </div>
-
-            <div
-                style={{
-                    maxWidth: '1100px',
-                    textAlign: 'center',
-                    color: COLORS.textInverse,
-                    zIndex: 1,
-                }}
-            >
-                {/* Headline */}
-                <h1
-                    style={{
-                        fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-                        fontWeight: '800',
-                        marginBottom: '1.5rem',
-                        lineHeight: '1.2',
-                        textShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-                    }}
-                >
-                    Track Every Mile,
-                    <br />
-                    <span
-                        style={{
-                            background: 'linear-gradient(90deg, #ffffff 0%, #d4d4d8 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                        }}
-                    >
-                        Optimize Every Trip
-                    </span>
-                </h1>
-
-                {/* Subheadline */}
-                <p
-                    style={{
-                        fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
-                        marginBottom: '3rem',
-                        opacity: 0.95,
-                        maxWidth: '750px',
-                        margin: '0 auto 3rem',
-                        lineHeight: '1.6',
-                    }}
-                >
-                    Smart GPS-powered tracking that monitors distance, speed, idling, stoppages, and overspeeding. Gain real-time insights and visualize fleet performance with interactive maps.
-                </p>
-
-                {/* CTA Buttons */}
-                <div
-                    style={{
-                        display: 'flex',
-                        gap: '1.2rem',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap',
-                        marginBottom: '4rem',
-                    }}
-                >
-                    <button
-                        onClick={() => navigate('/login')}
-                        style={{
-                            background: COLORS.textInverse,
-                            color: COLORS.primary,
-                            border: 'none',
-                            padding: '1rem 2.2rem',
-                            borderRadius: '10px',
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.25)',
-                            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px)';
-                            e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
-                        }}
-                    >
-                        Get Started Free
-                    </button>
-                    <button
-                        onClick={() => scrollToSection('features')}
-                        style={{
-                            background: 'transparent',
-                            color: COLORS.textInverse,
-                            border: `2px solid ${COLORS.textInverse}`,
-                            padding: '1rem 2.2rem',
-                            borderRadius: '10px',
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'background 0.3s ease, color 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = COLORS.textInverse;
-                            e.currentTarget.style.color = COLORS.primary;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = COLORS.textInverse;
-                        }}
-                    >
-                        Explore Features
-                    </button>
+        <section className="lp-hero" id="hero">
+            <div className="lp-hero-gridlines" aria-hidden="true" />
+            <div className="lp-wrap lp-hero-grid">
+                <div>
+                    <p className="lp-kicker">Vehicle tracking</p>
+                    <h1 className="lp-display">
+                        Follow the route.
+                        <em>Read the drive.</em>
+                    </h1>
+                    <p className="lp-hero-lead">
+                        Speedo is a simple way to see what a vehicle did. Track it live from a phone,
+                        or upload a GPS file from a trip that already happened. You get the distance,
+                        the speed, the stops, and a map that is easy to follow.
+                    </p>
+                    <div className="lp-hero-actions">
+                        <button className="lp-btn lp-btn-amber" onClick={() => navigate('/register')} type="button">
+                            Create a free account
+                            <ArrowForwardIcon style={{ fontSize: '1.1rem' }} />
+                        </button>
+                        <button className="lp-btn lp-btn-ghost" onClick={scrollToHow} type="button">
+                            See how it works
+                        </button>
+                    </div>
+                    <ul className="lp-pills">
+                        <li>No extra hardware</li>
+                        <li>Phone or CSV file</li>
+                        <li>Map, speed, and stops</li>
+                    </ul>
                 </div>
 
-                {/* Feature Highlights */}
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                        gap: '1.8rem',
-                        maxWidth: '850px',
-                        margin: '0 auto',
-                    }}
-                >
-                    {[
-                        { label: 'Real-time Tracking', value: '24/7' },
-                        { label: 'GPS Accuracy', value: '99.9%' },
-                        { label: 'Data Processing', value: 'Instant' },
-                    ].map((stat, index) => (
-                        <div
-                            key={index}
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                backdropFilter: 'blur(12px)',
-                                padding: '1.5rem',
-                                borderRadius: '12px',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                transition: 'transform 0.3s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-5px)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                            }}
-                        >
-                            <div
-                                style={{
-                                    fontSize: '2rem',
-                                    fontWeight: '800',
-                                    marginBottom: '0.5rem',
-                                }}
-                            >
-                                {stat.value}
-                            </div>
-                            <div style={{ opacity: 0.9, fontSize: '0.95rem' }}>{stat.label}</div>
+                <article className="lp-preview" aria-label="Example of a trip in Speedo">
+                    <div className="lp-preview-head">
+                        <div>
+                            <p className="lp-preview-label">Example trip</p>
+                            <h2>Morning city route</h2>
                         </div>
-                    ))}
-                </div>
+                        <span className="lp-live"><i /> Live</span>
+                    </div>
+                    <div className="lp-preview-map">
+                        <svg className="lp-route-svg" viewBox="0 0 400 220" role="img" aria-label="A sample route from start to the current position">
+                            <path
+                                d="M36 170 C 78 166, 92 124, 132 114 S 176 74, 206 94 S 250 158, 292 132 S 338 64, 368 52"
+                                fill="none"
+                                stroke="rgba(247,243,234,0.18)"
+                                strokeWidth="10"
+                                strokeLinecap="round"
+                            />
+                            <path
+                                d="M36 170 C 78 166, 92 124, 132 114 S 176 74, 206 94"
+                                fill="none"
+                                stroke="#3dbe8b"
+                                strokeWidth="3.5"
+                                strokeLinecap="round"
+                            />
+                            <path
+                                d="M206 94 C 228 112, 246 150, 292 132"
+                                fill="none"
+                                stroke="#f0b429"
+                                strokeWidth="3.5"
+                                strokeLinecap="round"
+                            />
+                            <path
+                                d="M292 132 C 318 122, 340 78, 368 52"
+                                fill="none"
+                                stroke="#ef6b5a"
+                                strokeWidth="3.5"
+                                strokeLinecap="round"
+                            />
+                            <circle cx="36" cy="170" r="5.5" fill="#3dbe8b" />
+                            <circle cx="368" cy="52" r="6" fill="#f7f3ea" />
+                        </svg>
+                        <span className="lp-map-tag lp-map-tag-start">Start · 8:12</span>
+                        <span className="lp-map-tag lp-map-tag-now">Now · 42 km/h</span>
+                    </div>
+                    <dl className="lp-preview-stats">
+                        <div>
+                            <dt>Distance</dt>
+                            <dd>18.4 km</dd>
+                        </div>
+                        <div>
+                            <dt>Avg speed</dt>
+                            <dd>46 km/h</dd>
+                        </div>
+                        <div>
+                            <dt>Idle</dt>
+                            <dd>4 min</dd>
+                        </div>
+                        <div>
+                            <dt>Too fast</dt>
+                            <dd>1</dd>
+                        </div>
+                    </dl>
+                    <p className="lp-legend">
+                        <span><i className="lp-dot lp-dot-green" /> Moving</span>
+                        <span><i className="lp-dot lp-dot-amber" /> Idle or stop</span>
+                        <span><i className="lp-dot lp-dot-red" /> Overspeed</span>
+                    </p>
+                </article>
             </div>
-
-            {/* Minimal Floating Animation Keyframes */}
-            <style>
-                {`
-                    @keyframes float {
-                        0% { transform: translateY(0); }
-                        50% { transform: translateY(-12px); }
-                        100% { transform: translateY(0); }
-                    }
-                `}
-            </style>
         </section>
     );
 };

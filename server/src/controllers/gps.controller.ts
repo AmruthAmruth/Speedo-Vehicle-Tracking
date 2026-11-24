@@ -15,7 +15,7 @@ export class GPSController {
     const { tripId } = req.params;
     const gpsPoint = req.body;
 
-    // 1. Quick Validation
+    
     if (!gpsPoint.latitude || !gpsPoint.longitude) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         message: HTTP_MESSAGES.GPS.INVALID_DATA,

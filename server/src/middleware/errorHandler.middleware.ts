@@ -70,3 +70,4 @@ export const notFoundHandler = (
         message: `Route ${req.originalUrl} not found`,
     });
 };
+

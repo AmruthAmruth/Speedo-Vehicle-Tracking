@@ -1,0 +1,10 @@
+import { jsx as _jsx } from "react/jsx-runtime";
+import { cn } from '../../../utils/cn';
+export const Table = ({ className, ...props }) => (_jsx("div", { className: "relative w-full overflow-auto rounded-xl border border-slate-100", children: _jsx("table", { className: cn("w-full caption-bottom text-sm", className), ...props }) }));
+export const TableHeader = ({ className, ...props }) => (_jsx("thead", { className: cn("[&_tr]:border-b bg-slate-50/50", className), ...props }));
+export const TableBody = ({ className, ...props }) => (_jsx("tbody", { className: cn("[&_tr:last-child]:border-0", className), ...props }));
+export const TableFooter = ({ className, ...props }) => (_jsx("tfoot", { className: cn("border-t bg-slate-50/50 font-medium [&>tr]:last:border-b-0", className), ...props }));
+export const TableRow = ({ className, ...props }) => (_jsx("tr", { className: cn("border-b transition-colors hover:bg-slate-50/50 data-[state=selected]:bg-slate-100", className), ...props }));
+export const TableHead = ({ className, ...props }) => (_jsx("th", { className: cn("h-12 px-4 text-left align-middle font-semibold text-slate-600 [&:has([role=checkbox])]:pr-0", className), ...props }));
+export const TableCell = ({ className, ...props }) => (_jsx("td", { className: cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 text-slate-600", className), ...props }));
+export const TableCaption = ({ className, ...props }) => (_jsx("caption", { className: cn("mt-4 text-sm text-slate-500", className), ...props }));

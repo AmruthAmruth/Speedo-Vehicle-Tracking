@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
+import OverviewSection from '../components/OverviewSection';
 import FeaturesSection from '../components/FeaturesSection';
 import HowItWorksSection from '../components/HowItWorksSection';
 import BenefitsSection from '../components/BenefitsSection';
@@ -14,6 +15,7 @@ const LandingPage: React.FC = () => {
             <Navbar />
             <main>
                 <HeroSection />
+                <OverviewSection />
                 <FeaturesSection />
                 <HowItWorksSection />
                 <BenefitsSection />
